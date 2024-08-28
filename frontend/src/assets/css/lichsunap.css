@@ -1,0 +1,24 @@
+/* Đặt phần tử chứa bảng có chiều cao cố định và thanh cuộn */
+.table-wrapper {
+    max-height: 200px; /* Điều chỉnh chiều cao tùy thuộc vào thiết kế của bạn */
+    overflow-y: auto; /* Hiển thị thanh cuộn dọc khi nội dung vượt quá chiều cao */
+}
+
+/* Cố định phần tiêu đề của bảng */
+.table-fixed thead {
+    position: -webkit-sticky; /* Cho trình duyệt WebKit (Safari, Chrome) */
+    position: sticky; /* Cho các trình duyệt hiện đại khác */
+    top: 0; /* Cố định tiêu đề ở trên cùng */
+    background-color: #f9f9f9; /* Màu nền cho tiêu đề */
+    z-index: 1; /* Đảm bảo tiêu đề nằm trên các hàng */
+}
+
+/* Đặt màu nền cho các hàng của bảng */
+.table-fixed tbody tr:nth-child(even) {
+    background-color: #343a40; /* Màu nền cho hàng chẵn */
+}
+
+.table-fixed tbody tr:nth-child(odd) {
+    background-color: #343a40; /* Màu nền cho hàng lẻ */
+}
+

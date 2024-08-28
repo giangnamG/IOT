@@ -1,0 +1,21 @@
+/* Thêm vào file CSS của bạn, ví dụ: ToastComponent.css */
+.toast-enter {
+    opacity: 0;
+    transform: translateY(-50px); /* Dịch chuyển Toast lên 10px để có hiệu ứng nổi lên */
+  }
+  
+  .toast-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+  }
+  
+  .toast-exit {
+    opacity: 1;
+  }
+  
+  .toast-exit-active {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+  }
+  

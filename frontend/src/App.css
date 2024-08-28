@@ -1,0 +1,87 @@
+#root {
+  overflow-x: hidden; 
+  width: 100%; 
+}
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px; /* Chiều rộng của thanh scroll */
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Màu nền của thanh scroll */
+  border-radius: 5px
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #343a40
+  ; /* Màu của thanh kéo */
+  border-radius: 4px; /* Độ cong của viền */
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #C71585; /* Màu của thanh kéo khi di chuột qua */
+}
+
+@keyframes blink {
+  0% {
+    color: #FFB6C1; /* Light Pink */
+  }
+  25% {
+    color: #87CEFA; /* Light Sky Blue */
+  }
+  50% {
+    color: #90EE90; /* Light Green */
+  }
+  75% {
+    color: #FFD700; /* Gold */
+  }
+  100% {
+    color: #FFB6C1; /* Light Pink */
+  }
+}
+
+.blink {
+  animation: blink 2s infinite; /* Tăng thời gian animation để màu thay đổi chậm hơn */
+}
+

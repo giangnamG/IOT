@@ -1,0 +1,223 @@
+/* Tùy chỉnh cỡ chữ và màu chữ cho thẻ h4 trong Swagger UI */
+.swagger-ui h4, h5, p,button  {
+    font-size: 1em !important; /* Tăng cỡ chữ lên 1.5em, bạn có thể điều chỉnh giá trị này */
+    color: #adb5bd !important; /* Đổi màu chữ thành xanh lá cây (#00ff00), bạn có thể thay đổi màu tùy ý */
+    font-weight: bold !important; 
+    margin-bottom: 10px !important; /* Tạo khoảng cách bên dưới */
+}
+
+.swagger-ui .operation-tag-content{
+    margin-left: 100 !important;
+}
+/* Loại bỏ lớp phủ màu xanh lam trên các nút khi hover, focus và active */
+.swagger-ui .btn:hover,
+.swagger-ui .btn:focus,
+.swagger-ui .btn:active {
+    background-color: inherit !important; /* Duy trì màu nền gốc */
+    box-shadow: none !important; /* Loại bỏ bóng đổ */
+    outline: none !important; /* Loại bỏ outline */
+    border: none !important; /* Loại bỏ viền */
+    font-size: calc(1em) !important; /* Tăng cỡ chữ lên 2 đơn vị */
+}
+
+/* Loại bỏ lớp phủ màu xanh lam từ các phần tử trong Swagger UI */
+.swagger-ui .opblock,
+.swagger-ui .opblock-summary,
+.swagger-ui .opblock-body {
+    box-shadow: none !important; /* Loại bỏ bóng đổ */
+    border: none !important; /* Loại bỏ viền */
+    background-color: inherit !important; /* Duy trì màu nền gốc */
+    color: #adb5bd !important; /* Thay đổi màu chữ thành #adb5bd */
+    font-size: calc(1em) !important; /* Tăng cỡ chữ lên 2 đơn vị */
+}
+
+/* Loại bỏ lớp phủ màu xanh lam từ các liên kết */
+.swagger-ui .opblock-summary:hover,
+.swagger-ui .opblock-summary:focus,
+.swagger-ui .opblock-summary:active {
+    background-color: inherit !important; /* Duy trì màu nền gốc */
+    box-shadow: none !important; /* Loại bỏ bóng đổ */
+    border: none !important; /* Loại bỏ viền */
+}
+
+/* Thay đổi màu chữ của các phần tử trong phần Response */
+.swagger-ui .response-col_status,
+.swagger-ui .response-col_description,
+.swagger-ui .response-col_links,
+.swagger-ui .response-col_schema,
+.swagger-ui .response-col_headers {
+    color: #adb5bd !important; /* Thay đổi màu chữ thành #adb5bd */
+    font-size: calc(1em) !important; /* Tăng cỡ chữ lên 2 đơn vị */
+}
+
+/* Thay đổi màu chữ của các phần tử trong phần Code Response */
+.swagger-ui .response-col_status .response-col_description,
+.swagger-ui .response-col_status .response-col_links {
+    color: #adb5bd !important; /* Thay đổi màu chữ thành #adb5bd */
+    font-size: calc(1em) !important; /* Tăng cỡ chữ lên 2 đơn vị */
+}
+
+/* Thay đổi màu chữ của các phần tử Curl Command */
+.swagger-ui .curl-command,
+.swagger-ui .request-url {
+    color: #adb5bd !important; /* Thay đổi màu chữ thành #adb5bd */
+    font-size: calc(1em) !important; /* Tăng cỡ chữ lên 2 đơn vị */
+}
+
+/* Thay đổi màu chữ của các tiêu đề nhỏ */
+.swagger-ui .opblock-title_normal,
+.swagger-ui .opblock-title {
+    color: #adb5bd !important; /* Thay đổi màu chữ thành #adb5bd */
+    font-size: calc(1em ) !important; /* Tăng cỡ chữ lên 2 đơn vị */
+}
+
+
+/* Tùy chỉnh màu sắc cho mã JSON hiển thị trong Swagger UI */
+.swagger-ui .microlight, 
+.swagger-ui pre,
+.swagger-ui code {
+    color: #EE82EE !important; /* Đổi màu chữ thành xanh lá cây (#00ff00) */
+    font-size: calc(0.8em ) !important; /* Tăng cỡ chữ lên 1 đơn vị */
+    
+}
+
+/* Tùy chỉnh màu sắc và cỡ chữ cho các phần tử code khác trong Response Body */
+.swagger-ui .response-col_description pre,
+.swagger-ui .response-col_description code,
+.swagger-ui .microlight {
+    color: #228B22 !important; /* Đổi màu chữ thành xanh lá cây (#00ff00) */
+    font-size: calc(0.9em ) !important; /* Tăng cỡ chữ lên 1 đơn vị */
+}
+
+/* Thay đổi màu sắc của từ khóa JSON và giá trị */
+.swagger-ui .hljs-attr {
+    color: #CD5C5C !important; /* Màu vàng cho từ khóa (key) */
+}
+/* Thay đổi màu chữ cho tất cả các chuỗi JSON trong Swagger UI */
+.swagger-ui .language-json span[style*="color: rgb(162, 252, 162)"]{
+    color: #2f981e !important; 
+}
+.swagger-ui .language-json span[style*="color: rgb(211, 99, 99)"] {
+    color:  #e2912f !important; 
+}
+.swagger-ui .language-json span[style*="color: rgb(252, 194, 140)"] {
+    color:  #c678dd !important; 
+}
+.swagger-ui .hljs-keyword {
+    color: #c678dd !important; /* Màu tím cho các từ khóa khác */
+}
+.swagger-ui .hljs-comment {
+    color: #5c6370 !important; /* Màu xám cho chú thích */
+}
+/* Ẩn văn bản của nút Download và hiển thị biểu tượng */
+.swagger-ui .download-contents-button {
+    font-size: 0; /* Ẩn văn bản bằng cách đặt kích thước font thành 0 */
+    background-color: transparent !important; /* Đặt màu nền trong suốt hoặc tùy chỉnh */
+    border: none !important; /* Loại bỏ viền nút nếu cần */
+    padding: 5px; /* Tùy chỉnh khoảng đệm */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer; /* Đặt con trỏ chuột thành kiểu pointer */
+}
+
+
+/* Tùy chỉnh màu nền và màu chữ cho nút "GET" */
+.swagger-ui .opblock.opblock-get .opblock-summary-method {
+    background-color: #4CAF50 !important; /* Đổi màu nền thành màu xanh lá cây (#4CAF50) hoặc màu khác bạn muốn */
+    color: #adb5bd !important; /* Đổi màu chữ thành trắng (#adb5bd) để dễ nhìn */
+    border: none;
+}
+/* Thay đổi màu nền và màu chữ cho phần wrapper */
+.swagger-ui .opblock-summary-path-description-wrapper {
+    background-color: rgba(0,0,0,.1) !important; /* Đổi màu nền thành màu xám đậm (#333333) hoặc màu khác */
+    color: #adb5bd !important; /* Đổi màu chữ thành màu trắng (#adb5bd) hoặc màu khác */
+    border-radius: 8px !important; /* Thêm độ cong 8px cho góc cạnh nếu muốn */
+    padding: 5px 10px !important; /* Thêm khoảng đệm để nội dung không sát viền */
+}
+
+/* Thay đổi màu nền và màu chữ cho phần đường dẫn (path) */
+.swagger-ui .opblock-summary-path {
+    color: #e6361b !important; /* Đổi màu chữ thành xanh lá cây (#00ff00) hoặc màu khác */
+}
+
+/* Thay đổi màu nền và màu chữ cho phần mô tả (description) */
+.swagger-ui .opblock-summary-description {
+    color: #ffa500 !important; /* Đổi màu chữ thành màu cam (#ffa500) hoặc màu khác */
+}
+
+/* Tùy chỉnh màu cho nút khi hover */
+.swagger-ui .opblock.opblock-get .opblock-summary-method:hover {
+    background-color: #45a049 !important; /* Màu nền khi hover */
+    color: #adb5bd !important; /* Màu chữ khi hover */
+    border-color: hsl(123, 40%, 45%) !important; /* Màu viền khi hover */
+}
+/* Thay đổi màu nền của phần tiêu đề trong Swagger UI */
+.swagger-ui .opblock-tag {
+    background-color: #343a40 !important; /* Đổi màu nền thành màu xám đậm (#333333) hoặc màu khác bạn muốn */
+    color: #adb5bd !important; /* Đổi màu chữ thành màu trắng (#adb5bd) hoặc màu khác bạn muốn */
+    font-size: calc(1em) !important; /* Tăng cỡ chữ lên 2 đơn vị */
+    border-bottom: 1px solid #444444 !important; /* Thêm viền dưới nếu cần */
+    border-radius: 8px !important; /* Thêm độ cong 8px cho góc cạnh */
+}
+
+/* Thay đổi màu nền cho phần tử opblock-section-header */
+.swagger-ui .opblock-section-header {
+    background-color: rgba(0,0,0,.1) !important; /* Đổi màu nền thành màu xanh lá cây (#4CAF50) hoặc màu khác mà bạn muốn */
+    color: #adb5bd !important; /* Đổi màu chữ thành màu trắng (#adb5bd) hoặc màu khác mà bạn muốn */
+    padding: 10px !important; /* Thêm khoảng đệm để nội dung không sát viền */
+    border-radius: 5px !important; /* Thêm độ cong cho góc cạnh, điều chỉnh giá trị này nếu muốn cong hơn */
+    border-bottom: 2px solid #EE82EE !important; /* Tạo viền dưới để làm nổi bật */
+}
+/* Thay đổi màu nền và màu chữ khi hover */
+.swagger-ui .opblock-section-header:hover {
+    background-color: #343a40 !important; /* Đổi màu nền khi hover */
+    color: #adb5bd !important; /* Màu chữ khi hover */
+}
+/* Thay đổi màu nền và màu chữ cho phần tử <select> với lớp content-type */
+.swagger-ui .content-type-wrapper .content-type {
+    background-color: #333333 !important; /* Đổi màu nền thành màu xám đậm (#333333) hoặc màu khác bạn muốn */
+    color: #adb5bd !important; /* Đổi màu chữ thành màu trắng (#adb5bd) hoặc màu khác bạn muốn */
+    border: 1px solid #444444 !important; /* Tạo viền xung quanh cho phần tử */
+    border-radius: 4px !important; /* Thêm độ cong 4px cho góc cạnh */
+    padding: 5px !important; /* Thêm khoảng đệm để nội dung không sát viền */
+    appearance: none !important; /* Loại bỏ kiểu mặc định của trình duyệt */
+}
+
+/* Thay đổi màu nền và màu chữ khi hover vào phần tử <select> */
+.swagger-ui .content-type-wrapper .content-type:hover {
+    background-color: #343a40 !important; /* Đổi màu nền khi hover */
+    color: #adb5bd !important; /* Màu chữ khi hover */
+    border-color: #555555 !important; /* Đổi màu viền khi hover */
+    cursor: pointer;
+}
+
+/* Thay đổi màu mũi tên chọn (nếu cần) */
+.swagger-ui .content-type-wrapper .content-type::-ms-expand {
+    display: none; /* Ẩn mũi tên mặc định của IE */
+}
+
+.swagger-ui .content-type-wrapper .content-type::after {
+    content: '▼'; /* Thêm mũi tên tùy chỉnh */
+    color: #adb5bd; /* Màu của mũi tên */
+    padding-left: 8px; /* Khoảng cách giữa nội dung và mũi tên */
+    pointer-events: none; /* Ngăn chặn sự kiện click vào mũi tên */
+    position: absolute; /* Đặt mũi tên trong phạm vi của phần tử */
+    right: 10px; /* Canh phải */
+    cursor: pointer;
+}
+
+/* Định vị nút clipboard sang bên phải */
+.swagger-ui .copy-to-clipboard {
+    position: absolute !important; /* Đặt vị trí tuyệt đối để có thể di chuyển được */
+    top: 10px !important; /* Khoảng cách từ trên xuống */
+    right: 10px !important; /* Đưa sang bên phải */
+    margin-bottom: 0 !important; /* Loại bỏ khoảng cách dưới nếu có */
+    background-color: transparent !important; /* Đặt nền trong suốt */
+    border: none !important; /* Loại bỏ viền */
+    padding: 0 !important; /* Loại bỏ padding */
+    cursor: pointer; /* Đổi con trỏ chuột khi hover vào biểu tượng */
+    z-index: 10; /* Đảm bảo biểu tượng hiển thị trên cùng */
+}
+
+
