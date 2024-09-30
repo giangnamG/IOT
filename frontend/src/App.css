@@ -85,3 +85,10 @@
   animation: blink 2s infinite; /* Tăng thời gian animation để màu thay đổi chậm hơn */
 }
 
+.none-outline {
+  cursor: pointer !important;
+  outline: none !important;  /* Loại bỏ outline khi focus */
+  box-shadow: none !important;  /* Loại bỏ shadow khi focus */
+  border-radius: 5px !important;  /* Tùy chỉnh độ cong của góc */
+  padding: 8px !important;  /* Điều chỉnh padding */
+}

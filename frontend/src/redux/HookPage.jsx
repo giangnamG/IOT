@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit'
 export const HookPage = createSlice({
     name: 'hook',
     initialState: {
-        hookName: 'default',
+        hookName: localStorage.getItem('fragment') ? localStorage.getItem('fragment') : 'default',
         props: {}
     },
     reducers: {

@@ -29,8 +29,8 @@ export default function SideBarComponent() {
     const links = [
         { href: '/', label: 'Home Page' },
         { href: '/#Dashboard', label: 'Dashboard' },
-        { href: '/#Devices', label: 'Devices' },
-        { href: '/#DataStreamLogs', label: 'Data Streaming Logs' },
+        { href: '/#Devices', label: 'Action History' },
+        { href: '/#DataStreamLogs', label: 'Data Sensor' },
         { href: '/#Profile', label: 'Profile' },
     ];
 
@@ -75,6 +75,7 @@ export default function SideBarComponent() {
                 console.log(href)
                 break;
         }
+        localStorage.setItem('fragment', href)
     }
 
     return (

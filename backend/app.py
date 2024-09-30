@@ -1,7 +1,8 @@
 import eventlet
 eventlet.monkey_patch()
 
-import os, json, time
+import os, subprocess,json, time
+import requests
 from datetime import datetime
 from config import ApplicationConfig
 from topics import * 
@@ -10,20 +11,17 @@ from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from flasgger import Swagger
-from models import db, DataRealTime
+from models import db, DataRealTime, DeviceHistory,DeviceStatus
+from sqlalchemy import func
 
 ''' ------------------------------Load Variable----------------------------------'''
 
 # Global variable to keep track of the publish status
 publish_status = {'status': None, 'message': None}
-subscribe_realtime_status = {'status': None, 'topic':None, 'message': None}
-subscribe_command_status = {'status': None, 'topic':None, 'message': None}
 front_end = os.getenv('FRONTEND_URL')
 
 
 ''' ----------------------------Server Config----------------------------------'''
-
-
 
 app = Flask(__name__)
 
@@ -60,6 +58,8 @@ def get_users():
                 type: integer
               name:
                 type: string
+              isAdmin:
+                type: boolean
     """
     users = [
         {"id": 1, "name": "John Doe","isAdmin": False},
@@ -85,40 +85,23 @@ def index():
 
 @app.route('/api/v1/publish_cmd', methods=['POST'])
 def publish_cmd():
-    global subscribe_command_status
     try:
-        t = time.localtime()
-        current_time = time.strftime("%H:%M:%S %m-%d-%Y", t)
-        
         data = request.get_json()
         print(data)
         topic = topics_publish[data['topic']]
         cmd = commands[data['cmd']]
         mqtt.publish(topic, cmd)
-        time.sleep(2.2)
+        time.sleep(3)
         mqtt.unsubscribe(topic)
-        status = None
-        print("subscribe_command_status command: ", subscribe_command_status)
         
-        if data['cmd'] == 'turnOn' and subscribe_command_status['status'] == 'Wrong Command':
-            status = data['topic'] + ' is already on!'
-        elif data['cmd'] == 'turnOff' and subscribe_command_status['status'] == 'Wrong Command':
-            status = data['topic'] +' is already off!'
-        else:
-            status = subscribe_command_status['status']
-        res = {
-            'topic': topic,
-            'cmd': cmd,
-            'time': current_time,
-            'status':status,
-        }
-        subscribe_command_status = {'status': None, 'topic':None, 'message': None}
-        
-        return jsonify(res), 200
+        return jsonify({
+            'message': 'No Error'
+        }), 200
     except Exception as e:
+        # return {'error': e}, 500
         return {'error': 'invalid command'}, 500
 
-@app.route('/api/v1/data_stream_logs', methods=['POST'])
+@app.route('/api/v1/streaming/data', methods=['POST'])
 def data_stream_logs():
     try:
         data = request.get_json()
@@ -144,6 +127,77 @@ def data_stream_logs():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
+@app.route('/api/v1/device/status', methods=['GET'])
+def device_status():
+    try:
+        devices = DeviceStatus.query.all()
+        
+        return jsonify([
+            {
+                'id': device.id,
+                'device_name': device.device_name,
+                'isOn': device.isOn
+            }
+            for device in devices
+        ])
+    except Exception as e:
+        return jsonify(f"Error querying devices: {e}"), 500
+
+@app.route('/api/v1/device/logs', methods=['POST'])
+def device_logs():
+    try:
+        data = request.get_json()
+        page = data.get('page', 1)
+        per_page = data.get('per_page', 10)
+        latest = data.get('latest', True) 
+        fromDate = data.get('fromDate', False)
+        toDate = data.get('toDate', False)
+        
+        if latest:
+            data_paginated = DeviceHistory.query.order_by(
+                func.strftime('%Y-%m-%d', DeviceHistory.timestamp).desc()
+                ).paginate(page=page, per_page=per_page, error_out=False)
+        else:
+            data_paginated = DeviceHistory.query.order_by(
+                func.strftime('%Y-%m-%d', DeviceHistory.timestamp).asc()
+                ).paginate(page=page, per_page=per_page, error_out=False)
+            
+        res = [data.to_dict() for data in data_paginated]
+        return jsonify({
+            'page': data_paginated.page,
+            'per_page': data_paginated.per_page,
+            'total': data_paginated.total,
+            'pages': data_paginated.pages,
+            'data': res
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/v1/device/logs/filter', methods=['POST'])
+def logs_filter():
+    data = request.get_json()
+    fromDay = data.get('from', None)
+    toDay = data.get('to', None)
+    time = data.get('search', None)  # time format expected: 'HH:MM:SS'
+
+    if fromDay and toDay and time:
+        try:
+            # Format 'timestamp' column is 'HH:MM:SS MM-DD-YYYY'
+            # We need to extract the date and time separately
+            query = DeviceHistory.query.filter(
+                DeviceHistory.timestamp.between(f'%{fromDay}%', f'%{toDay}%'),  # Date filtering
+                DeviceHistory.timestamp.like(f'%{time}%')  # Time filtering with LIKE
+            )
+            res = query.all()  # Thực thi truy vấn và lấy tất cả kết quả
+            result = [row.to_dict() for row in res]  # Giả sử bạn có phương thức để chuyển đổi object thành dict
+
+            return jsonify(result), 200
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return jsonify({"error": str(e)}), 500
+    else:
+        return jsonify({"error": "Invalid input"}), 400
+
 ''' ------------------------------------SOCKET-------------------------------'''
 
 @socketio.on('message')
@@ -156,8 +210,9 @@ def handle_message(data):
 
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
+    print(f"Connected with result code {rc}")
+    
     if rc == 0:
-        print(f"Connected with result code {rc}")
         client.subscribe(topics_subscribe['streaming/all'])
         
         client.subscribe(topics_subscribe['temperature'])
@@ -173,12 +228,10 @@ def handle_connect(client, userdata, flags, rc):
 
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, msg):
-    global subscribe_realtime_status
-    global subscribe_command_status
     try:
         message = json.loads(msg.payload.decode())
         t = time.localtime()
-        current_time = time.strftime("%H:%M:%S %m-%d-%Y", t)
+        current_time = time.strftime("%H:%M:%S %Y-%m-%d", t)
         
         custom_data = None
         
@@ -204,16 +257,53 @@ def handle_mqtt_message(client, userdata, msg):
                                         timestamp=custom_data['message']['time'])
                 db.session.add(new_data)
                 db.session.commit()
-
-            
-            subscribe_realtime_status['status'] = 'received'
-            subscribe_realtime_status['topic'] = topic
-            subscribe_realtime_status['message'] = custom_data['message']
         else:
-            custom_data = message
-            subscribe_command_status['status'] = custom_data['status']
-            subscribe_command_status['topic'] = topic
-            subscribe_command_status['message'] = None
+            device_name = message['topic'].split('/')[0]
+            cmd = message['cmd']
+            status = message['status']
+            note = None
+            isOn = None
+            if 'Successfully' in status:
+                updateDevice = True
+                note = status
+            elif 'already off!' in status:
+                note = device_name +' is already off!'
+                updateDevice = False
+                isOn = False
+            elif 'already on!' in status:
+                updateDevice = False
+                isOn = True
+                note = device_name + ' is already on!'
+            else:
+                updateDevice = False
+                note = 'Some things went wrong'
+            print(note)
+            socketio.emit('device', {
+                'device_name': device_name,
+                'cmd': cmd,
+                'status': note,
+                'timestamp': current_time  # timestamp for real time data
+            })
+            
+            # Cập nhập trạng thái của đèn
+            with app.app_context(): 
+                device = DeviceStatus.query.filter_by(device_name=device_name).first()
+                if device:
+                    # Cập nhật trạng thái isOn
+                    if updateDevice:
+                        device.isOn = not device.isOn
+                    else:
+                        if isOn is not None:
+                            device.isOn = isOn
+     
+                    device.note = note
+                    db.session.commit()
+            
+            # Cập nhập Log Action
+            with app.app_context(): 
+                new_log = DeviceHistory(device_name=topic, command=cmd, status=status, timestamp=current_time)
+                db.session.add(new_log)
+                db.session.commit()
     
     except Exception as e:
         print("Error processing message: ", e)
@@ -227,8 +317,21 @@ def handle_logging(client, userdata, level, buf):
     
 ''' ------------------------------------SERVER LAUNCH-----------------------------'''
 
+
 if __name__ == '__main__':
     # app.run(port=PORT, debug=True)
     with app.app_context():
         db.create_all()
+        
+        if not DeviceStatus.query.first():
+            fan = DeviceStatus(device_name='fan', isOn=False)
+            airConditioner = DeviceStatus(device_name='airConditioner', isOn=False)
+            lightBulb = DeviceStatus(device_name='lightBulb', isOn=False)
+            
+            db.session.add(fan)
+            db.session.add(airConditioner)
+            db.session.add(lightBulb)
+            
+            db.session.commit()
+        
     socketio.run(app, host='0.0.0.0', port=5000, use_reloader=True, debug=True)

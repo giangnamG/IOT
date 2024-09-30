@@ -16,9 +16,8 @@ class ApplicationConfig:
     MQTT_PASSWORD = os.getenv('MQTT_PASSWORD')
     MQTT_KEEPALIVE = int(os.getenv('MQTT_KEEPALIVE'))
     MQTT_TLS_ENABLED = os.getenv('MQTT_TLS_ENABLED') == 'True'
+    # MQTT_LOGGING = os.getenv('MQTT_LOGGING') == 'True'
     
-    
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URI"]
     SQLALCHEMY_TRACK_MODIFICATIONS = False

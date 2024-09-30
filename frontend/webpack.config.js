@@ -12,9 +12,27 @@ module.exports = {
             "buffer": require.resolve("buffer/"),
         },
     },
+    module: {
+        rules: [
+            {
+                test: /\.js$/,
+                enforce: 'pre',
+                use: ['source-map-loader'],
+                exclude: [
+                    // Loại trừ các module gây lỗi về source map
+                    /node_modules\/autolinker/,
+                ],
+            },
+        ],
+    },
     plugins: [
         new webpack.ProvidePlugin({
             Buffer: ['buffer', 'Buffer'],
         }),
+    ],
+    ignoreWarnings: [
+        {
+            module: /autolinker/, // Bỏ qua cảnh báo từ autolinker
+        },
     ],
 };

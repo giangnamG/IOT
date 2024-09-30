@@ -28,7 +28,7 @@ export default function ProfileComponent() {
                             <a href="/path/to/your/report-preview.pdf" target="_blank" rel="noopener noreferrer" className="profile-pdf-link">
                                 Preview Report (PDF)
                             </a>
-                            <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" className="profile-github-link">
+                            <a href="https://github.com/giangnamG/IOT/" target="_blank" rel="noopener noreferrer" className="profile-github-link">
                                 GitHub Profile
                             </a>
                         </div>

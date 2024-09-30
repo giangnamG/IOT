@@ -1,13 +1,19 @@
 #include "globals.h"
-#include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <PubSubClient.h>
 
 // Định nghĩa các biến toàn cục đã khai báo trong globals.h
 char receivedTopic_global[100];
 char receivedPayload_global[256];
 
 // Thông tin MQTT Broker
+
+// Địa chỉ IP của MQTT broker
+const char *mqtt_server = "192.168.1.32";
+const int mqtt_port = 1883;
+
+// Tài khoản MQTT
+const char *mqtt_user = "ngn";
+const char *mqtt_pass = "ngn";
+
 // Thông tin kết nối Wi-Fi
 const char *ssid = "0x6e676e";         // Thay bằng tên mạng Wi-Fi của bạn
 const char *password = "ngn@0x6e676e"; // Thay bằng mật khẩu Wi-Fi của bạn
@@ -48,7 +54,7 @@ void reconnect()
         String clientId = "ESP8266Client-";
         clientId += String(random(0xffff), HEX);
         // Thử kết nối
-        if (mqttClient.connect(clientId.c_str()))
+        if (mqttClient.connect(clientId.c_str(), mqtt_user, mqtt_pass))
         {
             Serial.println("connected");
             // Khi kết nối thành công, gửi một thông báo
@@ -61,6 +67,39 @@ void reconnect()
             Serial.print("failed, rc=");
             Serial.print(mqttClient.state());
             Serial.println(" try again in 5 seconds");
+            // Hiển thị chi tiết lỗi
+            switch (mqttClient.state())
+            {
+            case -4:
+                Serial.println("Connection timeout");
+                break;
+            case -3:
+                Serial.println("Connection lost");
+                break;
+            case -2:
+                Serial.println("Connect failed");
+                break;
+            case -1:
+                Serial.println("Disconnected");
+                break;
+            case 1:
+                Serial.println("Bad protocol version");
+                break;
+            case 2:
+                Serial.println("Bad client ID");
+                break;
+            case 3:
+                Serial.println("Unavailable");
+                break;
+            case 4:
+                Serial.println("Bad credentials");
+                break;
+            case 5:
+                Serial.println("Unauthorized");
+                break;
+            default:
+                Serial.println("Unknown error");
+            }
             // Đợi 5 giây trước khi thử lại
             delay(5000);
         }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { socket } from '../../../socket';
 import { useDispatch } from 'react-redux';
 import { addDataStream } from '../../../redux/Streaming'
+import { setResponseCommand } from '../../../redux/ResponseCommand';
 
 export default function WebSocketComponent() {
     const [isConnected, setIsConnected] = useState(socket.connected);
@@ -30,14 +31,18 @@ export default function WebSocketComponent() {
         }
 
         function onStreamingAll(value) {
-            console.log('received streaming/all:', value);
+            // console.log('received streaming/all:', value);
             dispatch(addDataStream(value))
+        }
+        function onDevice(value) {
+            dispatch(setResponseCommand(value))
         }
 
         socket.on('connect', onConnect);
         socket.on('response', onResponse);
         socket.on('streaming/all', onStreamingAll);
 
+        socket.on('device', onDevice);
 
         return () => {
             socket.off('connect', onConnect);
