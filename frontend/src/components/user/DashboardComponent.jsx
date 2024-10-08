@@ -48,7 +48,6 @@ export default function DashboardComponent({ props }) {
                             <ClockComponent />
                         </div>
                     </Row>
-
                 </Col>
             </Row>
             <Row style={{

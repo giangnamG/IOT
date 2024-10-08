@@ -10,7 +10,7 @@ function ToastComponent({ showToast, toggleToast }) {
         <>
             <ToastContainer
                 className="p-3"
-                position="middle-center"  // Đặt vị trí ở góc trên bên phải
+                position="top-center"  // Đặt vị trí ở góc trên bên phải
 
             >
                 <CSSTransition

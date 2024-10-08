@@ -2,7 +2,6 @@ import eventlet
 eventlet.monkey_patch()
 
 import os, subprocess,json, time
-import requests
 from datetime import datetime
 from config import ApplicationConfig
 from topics import * 
@@ -41,6 +40,7 @@ socketio = SocketIO(app, cors_allowed_origins=front_end)
 
 ''' ------------------------------------------API DOCUMENT------------------------------------- '''
 
+''' Example usage'''
 @app.route('/users', methods=['GET'])
 def get_users():
     """
@@ -83,39 +83,46 @@ def index():
         print(e)
         return 'some error', 503
 
-@app.route('/api/v1/publish_cmd', methods=['POST'])
-def publish_cmd():
-    try:
-        data = request.get_json()
-        print(data)
-        topic = topics_publish[data['topic']]
-        cmd = commands[data['cmd']]
-        mqtt.publish(topic, cmd)
-        time.sleep(3)
-        mqtt.unsubscribe(topic)
-        
-        return jsonify({
-            'message': 'No Error'
-        }), 200
-    except Exception as e:
-        # return {'error': e}, 500
-        return {'error': 'invalid command'}, 500
-
-@app.route('/api/v1/streaming/data', methods=['POST'])
+@app.route('/api/v1/sensors/streaming/logs', methods=['POST'])
 def data_stream_logs():
     try:
         data = request.get_json()
         page = data.get('page', 1)
         per_page = data.get('per_page', 10)
         latest = data.get('latest', True) 
-        fromDate = data.get('fromDate', False)
-        toDate = data.get('toDate', False)
+        fromDay = data.get('fromDay', False)
+        toDay = data.get('toDay', False)
         
+        temp = data.get('temp', None)
+        humidity = data.get('humidity', None)
+        light = data.get('light', None)
+        
+        query = DataRealTime.query
+        
+        # Sắp xếp và phân trang kết quả
         if latest:
-            data_paginated = DataRealTime.query.order_by(DataRealTime.timestamp.desc()).paginate(page=page, per_page=per_page, error_out=False)
+            query = query.order_by(DataRealTime.timestamp.desc())
         else:
-            data_paginated = DataRealTime.query.order_by(DataRealTime.timestamp.asc()).paginate(page=page, per_page=per_page, error_out=False)
+            query = query.order_by(DataRealTime.timestamp.asc())
+
+        if fromDay and toDay:
+            query = query.filter(
+                func.DATE(DataRealTime.timestamp).between(fromDay, toDay)
+                )
+        elif fromDay:
+            query = query.filter(DataRealTime.timestamp >= fromDay)
+        elif toDay:
+            query = query.filter(DataRealTime.timestamp <= toDay)
             
+        if temp is not None:
+            query = query.filter(DataRealTime.temp.like(f"{temp}%"))
+        if humidity is not None:
+            query = query.filter(DataRealTime.humidity.like(f"{humidity}%"))
+        if light is not None:
+            query = query.filter(DataRealTime.light.like(f"{light}%"))
+                
+        data_paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+        
         res = [data.to_dict() for data in data_paginated]
         return jsonify({
             'page': data_paginated.page,
@@ -127,6 +134,7 @@ def data_stream_logs():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
+''' DEVICE '''
 @app.route('/api/v1/device/status', methods=['GET'])
 def device_status():
     try:
@@ -143,6 +151,24 @@ def device_status():
     except Exception as e:
         return jsonify(f"Error querying devices: {e}"), 500
 
+@app.route('/api/v1/device/publish_cmd', methods=['POST'])
+def publish_cmd():
+    try:
+        data = request.get_json()
+        print(data)
+        topic = topics_publish[data['topic']]
+        cmd = commands[data['cmd']]
+        mqtt.publish(topic, cmd)
+        time.sleep(3)
+        mqtt.unsubscribe(topic)
+        
+        return jsonify({
+            'message': 'No Error'
+        }), 200
+    except Exception as e:
+        # return {'error': e}, 500
+        return {'error': 'invalid command'}, 500
+    
 @app.route('/api/v1/device/logs', methods=['POST'])
 def device_logs():
     try:
@@ -150,17 +176,28 @@ def device_logs():
         page = data.get('page', 1)
         per_page = data.get('per_page', 10)
         latest = data.get('latest', True) 
-        fromDate = data.get('fromDate', False)
-        toDate = data.get('toDate', False)
+        fromDay = data.get('fromDay', False)
+        toDay = data.get('toDay', False)
         
+        query = DeviceHistory.query
+        
+        # Lọc theo khoảng thời gian từ fromDay đến toDay
+        if fromDay and toDay:
+            query = query.filter(
+                func.DATE(DeviceHistory.timestamp).between(fromDay, toDay)
+                )
+        elif fromDay:
+            query = query.filter(DeviceHistory.timestamp >= fromDay)
+        elif toDay:
+            query = query.filter(DeviceHistory.timestamp <= toDay)
+            
+        # Sắp xếp và phân trang kết quả
         if latest:
-            data_paginated = DeviceHistory.query.order_by(
-                func.strftime('%Y-%m-%d', DeviceHistory.timestamp).desc()
-                ).paginate(page=page, per_page=per_page, error_out=False)
+            query = query.order_by(DeviceHistory.timestamp.desc())
         else:
-            data_paginated = DeviceHistory.query.order_by(
-                func.strftime('%Y-%m-%d', DeviceHistory.timestamp).asc()
-                ).paginate(page=page, per_page=per_page, error_out=False)
+            query = query.order_by(DeviceHistory.timestamp.asc())
+
+        data_paginated = query.paginate(page=page, per_page=per_page, error_out=False)
             
         res = [data.to_dict() for data in data_paginated]
         return jsonify({
@@ -171,32 +208,9 @@ def device_logs():
             'data': res
         }), 200
     except Exception as e:
+        print(str(e))
         return jsonify({'error': str(e)}), 500
     
-@app.route('/api/v1/device/logs/filter', methods=['POST'])
-def logs_filter():
-    data = request.get_json()
-    fromDay = data.get('from', None)
-    toDay = data.get('to', None)
-    time = data.get('search', None)  # time format expected: 'HH:MM:SS'
-
-    if fromDay and toDay and time:
-        try:
-            # Format 'timestamp' column is 'HH:MM:SS MM-DD-YYYY'
-            # We need to extract the date and time separately
-            query = DeviceHistory.query.filter(
-                DeviceHistory.timestamp.between(f'%{fromDay}%', f'%{toDay}%'),  # Date filtering
-                DeviceHistory.timestamp.like(f'%{time}%')  # Time filtering with LIKE
-            )
-            res = query.all()  # Thực thi truy vấn và lấy tất cả kết quả
-            result = [row.to_dict() for row in res]  # Giả sử bạn có phương thức để chuyển đổi object thành dict
-
-            return jsonify(result), 200
-        except Exception as e:
-            print(f"Error occurred: {e}")
-            return jsonify({"error": str(e)}), 500
-    else:
-        return jsonify({"error": "Invalid input"}), 400
 
 ''' ------------------------------------SOCKET-------------------------------'''
 
@@ -222,6 +236,7 @@ def handle_connect(client, userdata, flags, rc):
         client.subscribe(topics_subscribe['fan'])
         client.subscribe(topics_subscribe['airConditioner'])
         client.subscribe(topics_subscribe['lightBulb'])
+        client.subscribe(topics_subscribe['allDevice'])
         
     else:
         print(f"Failed to connect, return code {rc}")
@@ -231,33 +246,35 @@ def handle_mqtt_message(client, userdata, msg):
     try:
         message = json.loads(msg.payload.decode())
         t = time.localtime()
-        current_time = time.strftime("%H:%M:%S %Y-%m-%d", t)
-        
+        current_time = time.strftime("%H:%M:%S %Y-%m-%d", t)  # Chuỗi thời gian
+
         custom_data = None
-        
+
         topic = msg.topic
-        if topic in ['streaming/all','temperature', 'humidity', 'lights']:
-            print("Emit real time data: ",topic)
+        if topic in ['streaming/all', 'temperature', 'humidity', 'lights']:
+            print("Emit real time data: ", topic)
             custom_data = {
-            'topic': msg.topic,
-            'message': {
-                'time': current_time,
-                'temp': message['temp'],
-                'humidity': message['humidity'],
-                'light': message['light'],
+                'topic': msg.topic,
+                'message': {
+                    'time': current_time,
+                    'temp': message['temp'],
+                    'humidity': message['humidity'],
+                    'light': message['light'],
+                }
             }
-        }
             ''' emit real time data '''
             socketio.emit(topic, custom_data)
             
             with app.app_context(): 
+                timestamp = datetime.strptime(custom_data['message']['time'], "%H:%M:%S %Y-%m-%d")
                 new_data = DataRealTime(temp=custom_data['message']['temp'],
                                         humidity=custom_data['message']['humidity'],
                                         light=custom_data['message']['light'],
-                                        timestamp=custom_data['message']['time'])
+                                        timestamp=timestamp)
                 db.session.add(new_data)
                 db.session.commit()
         else:
+            print("mess_x: %s" % message)
             device_name = message['topic'].split('/')[0]
             cmd = message['cmd']
             status = message['status']
@@ -301,7 +318,8 @@ def handle_mqtt_message(client, userdata, msg):
             
             # Cập nhập Log Action
             with app.app_context(): 
-                new_log = DeviceHistory(device_name=topic, command=cmd, status=status, timestamp=current_time)
+                timestamp = datetime.strptime(current_time, "%H:%M:%S %Y-%m-%d")
+                new_log = DeviceHistory(device_name=topic, command=cmd, status=status, timestamp=timestamp)
                 db.session.add(new_log)
                 db.session.commit()
     
@@ -322,11 +340,11 @@ if __name__ == '__main__':
     # app.run(port=PORT, debug=True)
     with app.app_context():
         db.create_all()
-        
         if not DeviceStatus.query.first():
             fan = DeviceStatus(device_name='fan', isOn=False)
             airConditioner = DeviceStatus(device_name='airConditioner', isOn=False)
             lightBulb = DeviceStatus(device_name='lightBulb', isOn=False)
+            allDevice = DeviceStatus(device_name='allDevice', isOn=False)
             
             db.session.add(fan)
             db.session.add(airConditioner)

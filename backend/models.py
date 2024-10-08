@@ -8,7 +8,7 @@ class DataRealTime(db.Model):
     temp = db.Column(db.Integer, nullable=False)
     humidity = db.Column(db.Integer, nullable=False)
     light = db.Column(db.Integer, nullable=False)
-    timestamp = db.Column(db.String(50), nullable=False)
+    timestamp = db.Column(db.DateTime(50), nullable=False)
     def to_dict(self):
         return {
             'id': self.id,
@@ -23,7 +23,7 @@ class DeviceHistory(db.Model):
     device_name = db.Column(db.String(50), nullable=False)
     command = db.Column(db.String(50), nullable=False)
     status = db.Column(db.String(50), nullable=False)
-    timestamp = db.Column(db.String(50), nullable=False)
+    timestamp = db.Column(db.DateTime(50), nullable=False)
     
     def to_dict(self):
         return {
@@ -31,7 +31,7 @@ class DeviceHistory(db.Model):
             'device_name': self.device_name,
             'command': self.command,
             'status': self.status,
-            'timestamp': self.timestamp
+            'timestamp': self.timestamp.strftime("%Y-%m-%d %H:%M:%S")
         }
 
 class DeviceStatus(db.Model):

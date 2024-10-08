@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Col } from 'react-bootstrap';
+import config from '../../config';
 
 const ClockComponent = () => {
     const [time, setTime] = useState(new Date());
@@ -19,9 +21,23 @@ const ClockComponent = () => {
     };
 
     return (
-        <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
-            {formatTime(time)}
-        </div>
+        <Col lg={2} style={{
+            backgroundColor: config.app.styles.backgroundColor2,
+            borderColor: config.app.styles.backgroundColor2,
+            borderRadius: '5px',
+            padding: '4px',
+            cursor: 'pointer',
+            display: 'flex',
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: 'center',
+            height: 44
+
+        }}>
+            <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
+                {formatTime(time)}
+            </div>
+        </Col>
     );
 };
 

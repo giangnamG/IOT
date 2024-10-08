@@ -1,5 +1,6 @@
 #root {
   overflow-x: hidden; 
+  overflow-y: hidden; 
   width: 100%; 
 }
 .App {
@@ -42,7 +43,7 @@
 }
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 5px; /* Chiều rộng của thanh scroll */
+  width: 0px; /* Chiều rộng của thanh scroll */
 }
 
 /* Track */

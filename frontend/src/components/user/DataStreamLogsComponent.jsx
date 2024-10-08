@@ -1,11 +1,13 @@
 import { Container, Table, Form, Row, Col, InputGroup, Button } from "react-bootstrap";  // Thêm Form từ react-bootstrap
 import config from "../../config";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import axios from "axios";
 import DataPagination from "../activate/DataPagination";
 import ClockComponent from "../activate/ClockComponent"
 import SpinnerComponent from "../activate/SpinnerComponent"
 import "../../assets/css/fadeIn.css"
+import DateComponent from "../activate/DateComponent";
+import { useSelector } from "react-redux"
 
 
 export default function DataStreamLogsComponent({ props }) {
@@ -17,23 +19,36 @@ export default function DataStreamLogsComponent({ props }) {
             color: config.app.styles.fontLink,
         }
     }
+
+    const { fromDay, toDay } = useSelector((state) => state.dateRedux)
+
     const [isRealTime, setIsRealTime] = useState(true)
     const [isLoading, setIsLoading] = useState(true)
 
     const [data, setData] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [perPage, setPerPage] = useState(50)
+    const [isLatest, setIsLatest] = useState(true)
 
-    const [fromDay, setFromDay] = useState("")
-    const [toDay, setToDay] = useState("")
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+    const [filterTemp, setFilterTemp] = useState('');
+    const [filterHumidity, setFilterHumidity] = useState('');
+    const [filterLight, setFilterLight] = useState('');
+    const [filterTimestamp, setFilterTimestamp] = useState('');
 
 
     useEffect(() => {
         const fetchData = () => {
-            axios.post(config.backend.baseUrl + '/streaming/data', {
+            axios.post(config.backend.baseUrl + '/sensors/streaming/logs', {
                 "page": currentPage,
                 "per_page": perPage,
-                "latest": true
+                "latest": isLatest,
+                "fromDay": fromDay,
+                "toDay": toDay,
+                "temp": filterTemp,
+                "humidity": filterHumidity,
+                "light": filterLight,
+
             })
                 .then(response => {
                     setData(response.data);
@@ -50,11 +65,11 @@ export default function DataStreamLogsComponent({ props }) {
         fetchData(); // Gọi hàm fetchData ngay khi component mount hoặc khi dependencies thay đổi
 
         if (isRealTime) {
-            const interval = setInterval(fetchData, 2000); // Lặp lại sau mỗi 3 giây
+            const interval = setInterval(fetchData, 2000); // Lặp lại sau mỗi 2 giây
 
             return () => clearInterval(interval);
         }
-    }, [currentPage, perPage, isRealTime]);
+    }, [currentPage, perPage, isRealTime, isLatest, fromDay, toDay, filterTemp, filterHumidity, filterLight]);
 
 
     const handlePageChange = (pageNumber) => {
@@ -74,24 +89,7 @@ export default function DataStreamLogsComponent({ props }) {
         setIsRealTime(!isRealTime);
         setIsLoading(true);
     }
-    const handleFromDayChange = (value) => {
-        const arr = value.split('-')
-        const newFormat = `${arr[2]}-${arr[1]}-${arr[0]}`
-        setFromDay(newFormat);
-        console.log('from: ', newFormat)
-    }
-    const handleToDayChange = (value) => {
-        const arr = value.split('-')
-        const newFormat = `${arr[2]}-${arr[1]}-${arr[0]}`
-        setToDay(newFormat);
-        console.log('to: ', newFormat)
-    }
 
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
-    const [filterTemp, setFilterTemp] = useState('');
-    const [filterHumidity, setFilterHumidity] = useState('');
-    const [filterLight, setFilterLight] = useState('');
-    const [filterTimestamp, setFilterTimestamp] = useState('');
 
     // Hàm xử lý khi sắp xếp
     const handleSort = (key) => {
@@ -102,10 +100,15 @@ export default function DataStreamLogsComponent({ props }) {
         setSortConfig({ key, direction });
     };
 
+    const isLatestChange = (value) => {
+        setIsLatest(value === "false" ? false : true)
+        setIsLoading(true)
+    }
+
     // Kiểm tra nếu data.data tồn tại và là một mảng
+
     const filteredAndSortedData = useMemo(() => {
         let filteredItems = Array.isArray(data.data) ? [...data.data] : [];
-
         // Áp dụng bộ lọc cho từng trường
         if (filterTemp) {
             filteredItems = filteredItems.filter(item =>
@@ -124,7 +127,7 @@ export default function DataStreamLogsComponent({ props }) {
         }
         if (filterTimestamp) {
             filteredItems = filteredItems.filter(item =>
-                item.timestamp.includes(filterTimestamp)
+                new Date(item.timestamp).toISOString().replace('T', ' ').substring(0, 19).startsWith(filterTimestamp)
             );
         }
 
@@ -169,7 +172,7 @@ export default function DataStreamLogsComponent({ props }) {
                     color: config.app.styles.fontLink,
                     gap: '16px', // Sử dụng gap để tạo khoảng cách giữa các cột
                 }}>
-                    {/* per/page */}
+                    {/* pagination */}
                     <Col lg={1} style={{
                         backgroundColor: config.app.styles.backgroundColor2,
                         borderColor: config.app.styles.backgroundColor2,
@@ -208,90 +211,44 @@ export default function DataStreamLogsComponent({ props }) {
                             <option value="1000">1000</option>
                         </Form.Select>
                     </Col>
-                    {/* Clock */}
+
+                    {/* Is Latest */}
                     <Col lg={2} style={{
                         backgroundColor: config.app.styles.backgroundColor2,
                         borderColor: config.app.styles.backgroundColor2,
                         borderRadius: '5px',
-                        padding: '4px',
-                        cursor: 'pointer',
                         display: 'flex',
-                        justifyContent: "center",
-                        alignItems: "center",
                         textAlign: 'center',
-                        height: 44
-
-                    }}>
-                        <ClockComponent />
-                    </Col>
-                    {/* date time FROM */}
-                    <Col lg={2} style={{
-                        paddingInline: 2,
-                        paddingTop: 2.5,
+                        justifyContent: "center",
                         height: 44
                     }}>
-                        <InputGroup>
-                            <InputGroup.Text style={{
-                                backgroundColor: config.app.styles.backgroundColor,  // Điều chỉnh màu nền cho phù hợp với giao diện
-                                borderColor: config.app.styles.backgroundColor2,
+                        <Form.Select aria-label="Default select example"
+                            className="none-outline"
+                            style={{
+                                display: 'inline-block',
                                 cursor: 'pointer',
-                                borderRadius: '5px',
-                                padding: 8,
+                                backgroundColor: config.app.styles.backgroundColor2,
                                 color: config.app.styles.fontLink,
-                                fontSize: 12,             // Điều chỉnh màu chữ cho phù hợp với giao diện
-                                fontWeight: 'bold',
-                            }}>Từ Ngày</InputGroup.Text>
-                            <Form.Control
-                                type="date"
-                                placeholder="Select Date"
-                                className="none-outline"
-                                style={{
-                                    display: 'inline-block',
-                                    backgroundColor: config.app.styles.backgroundColor2,
-                                    color: config.app.styles.fontLink,
-                                    cursor: 'pointer',
-                                    borderColor: config.app.styles.backgroundColor2,
-                                    borderRadius: '5px',
-                                    padding: 8,
-                                }}
-                                onChange={(e) => handleFromDayChange(e.target.value)}
-                            />
-                        </InputGroup>
-                    </Col>
-                    {/* date time TO */}
-                    <Col lg={2} style={{
-                        paddingInline: 2,
-                        paddingTop: 2.5,
-                        height: 44
-                    }}>
-                        <InputGroup>
-                            <InputGroup.Text style={{
-                                backgroundColor: config.app.styles.backgroundColor,  // Điều chỉnh màu nền cho phù hợp với giao diện
                                 borderColor: config.app.styles.backgroundColor2,
-                                cursor: 'pointer',
                                 borderRadius: '5px',
-                                padding: '8px',
-                                color: config.app.styles.fontLink,               // Điều chỉnh màu chữ cho phù hợp với giao diện
-                                fontSize: 12,           // Điều chỉnh màu chữ cho phù hợp với giao diện
+                                textAlign: 'center',
+                                padding: 1,
                                 fontWeight: 'bold',
-                            }}>Đến Ngày</InputGroup.Text>
-                            <Form.Control
-                                type="date"
-                                placeholder="Select Date"
-                                className="none-outline"
-                                style={{
-                                    display: 'inline-block',
-                                    backgroundColor: config.app.styles.backgroundColor2,
-                                    color: config.app.styles.fontLink,
-                                    cursor: 'pointer',
-                                    borderColor: config.app.styles.backgroundColor2,
-                                    borderRadius: '5px',
-                                    padding: '8px',
-                                }}
-                                onChange={(e) => handleToDayChange(e.target.value)}
-                            />
-                        </InputGroup>
+                            }}
+                            onChange={(e) => isLatestChange(e.target.value)}
+                        >
+                            <option value="true"> Is Latest: True</option>
+                            <option value="false">Is Latest: False</option>
+                        </Form.Select>
                     </Col>
+
+                    {/* Clock */}
+
+                    <ClockComponent />
+
+                    {/* Date Filter */}
+                    <DateComponent />
+
                     {/* Button control real time */}
                     <Col lg={2} style={{
                         borderColor: config.app.styles.backgroundColor2,
@@ -307,6 +264,7 @@ export default function DataStreamLogsComponent({ props }) {
                         cursor: 'pointer',
                         fontWeight: 'bold',
                         fontSize: '16px',
+                        marginTop: 5,
                         width: '100%',
                         height: '100%',
                         display: 'flex',
@@ -315,7 +273,7 @@ export default function DataStreamLogsComponent({ props }) {
                     }}
                         className="none-outline"
                         onClick={handleRealTimeToggle}>
-                            {isRealTime ? 'Turn Off Real Time' : 'Turn On Real Time'}
+                            {isRealTime ? 'Mode Real Time Is On' : 'Mode Real Time Is Off'}
                         </Button></Col>
                 </Row>
 
@@ -415,7 +373,9 @@ export default function DataStreamLogsComponent({ props }) {
                                     <td style={{ ...styles.table }}>{item.temp}</td>
                                     <td style={{ ...styles.table }}>{item.humidity}</td>
                                     <td style={{ ...styles.table }}>{item.light}</td>
-                                    <td style={{ ...styles.table }}>{item.timestamp.replace('.000000', '')}</td>
+                                    <td style={{ ...styles.table }}>
+                                        {item.timestamp ? new Date(item.timestamp).toISOString().replace('T', ' ').substring(0, 19) : ''}
+                                    </td>
                                 </tr>
                             ))
                         }
@@ -444,8 +404,8 @@ export default function DataStreamLogsComponent({ props }) {
                     }}>
                         {/* Pagination */}
                         <DataPagination
-                            currentPage={data.page}
-                            totalPages={data.pages}
+                            currentPage={data.page || 1}
+                            totalPages={data.pages || 1}
                             onPageChange={handlePageChange}
                             style={{
                                 display: 'flex', // Đảm bảo sử dụng Flexbox trong DataPagination

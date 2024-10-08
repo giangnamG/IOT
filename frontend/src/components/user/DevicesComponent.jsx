@@ -1,11 +1,13 @@
-import { Container, Table, Form, Row, Col } from "react-bootstrap";
-import config from "../../config";
-import { useEffect, useState, useMemo } from "react";
-import axios from "axios";
-import DataPagination from "../activate/DataPagination";
-import SearchFilterDate from "../activate/SearchFilterDate";
-import SpinnerComponent from "../activate/SpinnerComponent";
-import "../../assets/css/fadeIn.css";
+import { Container, Table, Form, Row, Col } from "react-bootstrap"
+import config from "../../config"
+import { useEffect, useState, useMemo } from "react"
+import axios from "axios"
+import DataPagination from "../activate/DataPagination"
+import SpinnerComponent from "../activate/SpinnerComponent"
+import DateComponent from "../activate/DateComponent"
+import { useSelector } from "react-redux"
+
+import "../../assets/css/fadeIn.css"
 
 export default function DataStreamLogsComponent({ props }) {
     const styles = {
@@ -15,80 +17,99 @@ export default function DataStreamLogsComponent({ props }) {
             backgroundColor: config.app.styles.backgroundColor,
             color: config.app.styles.fontLink,
         }
-    };
+    }
+    const { fromDay, toDay } = useSelector((state) => state.dateRedux)
 
-    const [isRealTime, setIsRealTime] = useState(true);
-    const [isLoading, setIsLoading] = useState(true);
-    const [data, setData] = useState({ data: [] });  // Đảm bảo `data` có cấu trúc hợp lệ
-    const [currentPage, setCurrentPage] = useState(1);
-    const [perPage, setPerPage] = useState(50);
+
+    const [isRealTime, setIsRealTime] = useState(true)
+    const [isLoading, setIsLoading] = useState(true)
+    const [data, setData] = useState({ data: [] })  // Đảm bảo `data` có cấu trúc hợp lệ
+    const [currentPage, setCurrentPage] = useState(1)
+    const [perPage, setPerPage] = useState(50)
+    const [isLatest, setIsLatest] = useState(true)
+
+    const [filterTimestamp, setFilterTimestamp] = useState('');
+
 
     useEffect(() => {
+
         const fetchData = () => {
             axios.post(config.backend.baseUrl + '/device/logs', {
                 "page": currentPage,
                 "per_page": perPage,
-                "latest": true
+                "latest": isLatest,
+                "fromDay": fromDay,
+                "toDay": toDay
             })
                 .then(response => {
-                    setData(response.data || { data: [] });  // Nếu không có data, trả về mảng rỗng
-                    console.log(response.data);
+                    setData(response.data || { data: [] })  // Nếu không có data, trả về mảng rỗng
+                    console.log(response.data)
                 })
                 .catch(error => {
-                    console.error(error);
+                    console.error(error)
                 })
                 .finally(() => {
-                    setIsLoading(false);
-                });
-        };
-
-        fetchData();
-
-        if (isRealTime) {
-            const interval = setInterval(fetchData, 3000);
-            return () => clearInterval(interval);
+                    setIsLoading(false)
+                })
         }
-    }, [currentPage, perPage, isRealTime]);
+
+        fetchData()
+
+    }, [currentPage, perPage, isLatest, fromDay, toDay])
+
 
     const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-        setIsLoading(true);
-    };
+        setCurrentPage(pageNumber)
+        setIsLoading(true)
+    }
 
     const handlePerPageChange = (perPageNumber) => {
-        setPerPage(parseInt(perPageNumber));
-        setCurrentPage(1);
-        setIsLoading(true);
-    };
+        setPerPage(parseInt(perPageNumber))
+        setCurrentPage(1)
+        setIsLoading(true)
+    }
 
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
-    const [filterValue, setFilterValue] = useState('');
+    const isLatestChange = (value) => {
+        setIsLatest(value === "false" ? false : true)
+        setIsLoading(true)
+    }
+
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' })
+    const [filterValue, setFilterValue] = useState('')
 
     const handleSort = (key) => {
-        let direction = 'ascending';
+
+        let direction = 'ascending'
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
+            direction = 'descending'
         }
-        setSortConfig({ key, direction });
-    };
+        setSortConfig({ key, direction })
+    }
 
     const sortedData = useMemo(() => {
         // Kiểm tra nếu `data.data` là mảng trước khi thực hiện sắp xếp
-        let sortableItems = Array.isArray(data.data) ? [...data.data] : [];
+        let sortableItems = Array.isArray(data.data) ? [...data.data] : []
 
+
+        if (filterTimestamp) {
+            sortableItems = sortableItems.filter(item =>
+                item.timestamp.replace('.000000', '').startsWith(filterTimestamp)
+            );
+        }
+        // Sắp xếp sau khi lọc
         if (sortConfig !== null) {
             sortableItems.sort((a, b) => {
                 if (a[sortConfig.key] < b[sortConfig.key]) {
-                    return sortConfig.direction === 'ascending' ? -1 : 1;
+                    return sortConfig.direction === 'ascending' ? -1 : 1
                 }
                 if (a[sortConfig.key] > b[sortConfig.key]) {
-                    return sortConfig.direction === 'ascending' ? 1 : -1;
+                    return sortConfig.direction === 'ascending' ? 1 : -1
                 }
-                return 0;
-            });
+                return 0
+            })
         }
-        return sortableItems;
-    }, [data.data, sortConfig]);
+        return sortableItems
+    }, [data.data, sortConfig, filterTimestamp])
 
     return (
         <Container>
@@ -111,6 +132,7 @@ export default function DataStreamLogsComponent({ props }) {
                     justifyContent: 'center',
                     color: config.app.styles.fontLink,
                     gap: '16px',
+                    paddingLeft: 20
                 }}>
                     <Col lg={1} style={{
                         backgroundColor: config.app.styles.backgroundColor2,
@@ -151,7 +173,35 @@ export default function DataStreamLogsComponent({ props }) {
                         </Form.Select>
                     </Col>
 
-                    <SearchFilterDate />
+                    <Col lg={2} style={{
+                        backgroundColor: config.app.styles.backgroundColor2,
+                        borderColor: config.app.styles.backgroundColor2,
+                        borderRadius: '5px',
+                        display: 'flex',
+                        textAlign: 'center',
+                        justifyContent: "center",
+                        height: 44
+                    }}>
+                        <Form.Select aria-label="Default select example"
+                            className="none-outline"
+                            style={{
+                                display: 'inline-block',
+                                cursor: 'pointer',
+                                backgroundColor: config.app.styles.backgroundColor2,
+                                color: config.app.styles.fontLink,
+                                borderColor: config.app.styles.backgroundColor2,
+                                borderRadius: '5px',
+                                textAlign: 'center',
+                                padding: 1,
+                                fontWeight: 'bold',
+                            }}
+                            onChange={(e) => isLatestChange(e.target.value)}
+                        >
+                            <option value="true"> Is Latest: True</option>
+                            <option value="false">Is Latest: False</option>
+                        </Form.Select>
+                    </Col>
+                    <DateComponent />
                 </Row>
             </Container>
             <div style={{
@@ -188,6 +238,16 @@ export default function DataStreamLogsComponent({ props }) {
                                 >
                                     <i className="bi bi-funnel"></i>
                                 </button>
+                                <input
+                                    type="text"
+                                    placeholder="Filter Timestamp"
+                                    style={{
+                                        backgroundColor: config.app.styles.backgroundColor2,
+                                        color: 'red'
+
+                                    }}
+                                    onChange={(e) => setFilterTimestamp(e.target.value)}
+                                />
                             </th>
                         </tr>
                     </thead>

@@ -16,10 +16,64 @@ private:
     Fan fan = Fan();
     LightBulb lightBulb = LightBulb();
     AirConditional airConditional = AirConditional();
+    boolean allDeviceIsActive = false;
+
+    /*
+Hàm xử lý bật tắt 1 device
+*/
+    unsigned int device_process(Device *device)
+    {
+        unsigned int isActive = -1;
+
+        // nếu device đang tắt và subscribe cmd là ON thì cho bật device
+        if (device->deviceIsActive == false && strcmp(receivedPayload_global, cmd[0]) == 0)
+        {
+            isActive = 1;
+            device->turnOn();
+        }
+        // nếu device đang bật và subscribe cmd là OFF thì cho tắt device
+        else if (device->deviceIsActive == true && strcmp(receivedPayload_global, cmd[1]) == 0)
+        {
+            isActive = 0;
+            device->turnOff();
+            /*
+             *
+             */
+            if (this->allDeviceIsActive == true)
+                this->allDeviceIsActive = false;
+        }
+        // Nếu device đang tắt và subscribe cmd là OFF thì thông báo lại
+        else if (device->deviceIsActive == false && strcmp(receivedPayload_global, cmd[1]) == 0)
+        {
+            // không cho tương tác với device
+            isActive = 2;
+            device->isAlreadyOff();
+        }
+        // nếu device đang bật và subscribe cmd là ON thì thông báo lại
+        else if (device->deviceIsActive == true && strcmp(receivedPayload_global, cmd[0]) == 0)
+        {
+            // không cho tương tác với device
+            isActive = 3;
+            device->isAlreadyOn();
+        }
+
+        return isActive;
+    }
 
 public:
     void listen(PubSubClient &psClient)
     {
+        /*
+         *
+         */
+        if (fan.deviceIsActive == true && airConditional.deviceIsActive == true && lightBulb.deviceIsActive == true)
+        {
+            allDeviceIsActive = true;
+        }
+        else if (fan.deviceIsActive == false && airConditional.deviceIsActive == false && lightBulb.deviceIsActive == false)
+        {
+            allDeviceIsActive = false;
+        }
         ResultProcessTopic result;
 
         // Nếu không có Topic nào gửi đến thì không xử lý
@@ -38,20 +92,57 @@ public:
 
         unsigned int isActive = -1;
 
-        // Nếu topic này là fan
-        if (strcmp(receivedTopic_global, topic_subscribes[0]) == 0)
+        // Nếu topic này điều khiển cả 3 thiết bị
+        if (strcmp(receivedTopic_global, topic_subscribes[3]) == 0)
         {
-            isActive = fan.process();
+            allDeviceIsActive = fan.isActive() && airConditional.isActive() && lightBulb.isActive()
+                                    ? true
+                                    : false;
+            // nếu tất cả device đang tắt và subscribe cmd là ON thì cho bật device
+            if (allDeviceIsActive == false && strcmp(receivedPayload_global, cmd[0]) == 0)
+            {
+                allDeviceIsActive = true;
+                isActive = 1;
+                fan.turnOn();
+                lightBulb.turnOn();
+                airConditional.turnOn();
+            }
+            // nếu tất device đang bật và subscribe cmd là OFF thì cho tắt device
+            else if (allDeviceIsActive == true && strcmp(receivedPayload_global, cmd[1]) == 0)
+            {
+                isActive = 0;
+                allDeviceIsActive = false;
+                fan.turnOff();
+                lightBulb.turnOff();
+                airConditional.turnOff();
+            }
+            // Nếu device đang tắt và subscribe cmd là OFF thì thông báo lại
+            else if (allDeviceIsActive == false && strcmp(receivedPayload_global, cmd[1]) == 0)
+            {
+                // không cho tương tác với device
+                isActive = 2;
+            }
+            // nếu device đang bật và subscribe cmd là ON thì thông báo lại
+            else if (allDeviceIsActive == true && strcmp(receivedPayload_global, cmd[0]) == 0)
+            {
+                // không cho tương tác với device
+                isActive = 3;
+            }
+        }
+        // Nếu topic này là fan
+        else if (strcmp(receivedTopic_global, topic_subscribes[0]) == 0)
+        {
+            isActive = this->device_process(&fan);
         }
         // Nếu topic này là điều hòa
         else if (strcmp(receivedTopic_global, topic_subscribes[1]) == 0)
         {
-            isActive = airConditional.process();
+            isActive = this->device_process(&airConditional);
         }
         // Nếu topic này là đèn
         else if (strcmp(receivedTopic_global, topic_subscribes[2]) == 0)
         {
-            isActive = lightBulb.process();
+            isActive = this->device_process(&lightBulb);
         }
 
         // Trả kết quả xử lý topic
@@ -82,15 +173,21 @@ public:
                 Serial.println("TurnOff successfully");
                 delay(100);
             }
-            // Nếu lệnh được Publish đến bị sai logic nên không được thực hiện
-            // nếu đang tắt mà Publish đến lệnh tắt
+            /*
+             * Nếu lệnh được Publish đến bị sai logic nên không được thực hiện
+             */
+            /*
+             * nếu đang tắt mà Publish đến lệnh tắt
+             */
             else if (result.isActive == 2)
             {
                 status = "is already off!";
                 Serial.println(status);
                 delay(100);
             }
-            // nếu đang bật mà Publish đến lệnh bật
+            /*
+             * nếu đang bật mà Publish đến lệnh bật
+             */
             else if (result.isActive == 3)
             {
                 status = "is already on!";

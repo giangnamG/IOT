@@ -31,8 +31,6 @@ ChartJS.register(
     zoomPlugin // Đăng ký plugin zoom
 );
 
-const MAX_DATA_POINTS = 20; // Số lượng điểm dữ liệu tối đa hiển thị trên biểu đồ
-const MAX_DISPLAY_POINTS = 30; // Số lượng điểm tối đa trước khi trượt về bên trái
 
 const initialData = () => {
     return {
@@ -49,6 +47,8 @@ const ChartComponent = () => {
     const [max, setMax] = useState({ temp: 0, humidity: 0, light: 0 });
     const [chartData, setChartData] = useState(initialData());
     const { dataStream } = useSelector((state) => state.streaming);
+
+    const [MAX_DATA_POINTS, SET_MAX_DATA_POINTS] = useState(25)
 
     const chartRef = useRef(); // Ref để truy cập vào biểu đồ
 
@@ -87,12 +87,17 @@ const ChartComponent = () => {
                     .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`,
             ];
 
-            // Giới hạn số điểm khi không đang zoom và vượt quá 30 điểm
-            if (!isZoomed() && newTemp.length > MAX_DISPLAY_POINTS) {
+            // Giới hạn số lượng điểm dữ liệu hiển thị
+            if (newTemp.length > 0.8 * MAX_DATA_POINTS) {
                 newTemp.shift();
                 newHumidity.shift();
                 newLight.shift();
                 newTimeLabels.shift();
+
+                // Cập nhật lại chỉ số x cho các điểm còn lại sau khi shift
+                newTemp.forEach((point, idx) => point.x = idx);
+                newHumidity.forEach((point, idx) => point.x = idx);
+                newLight.forEach((point, idx) => point.x = idx);
             }
 
             setSpinner(false);
@@ -116,12 +121,6 @@ const ChartComponent = () => {
         }
     }, [dataStream]);
 
-    const isZoomed = () => {
-        // Kiểm tra nếu trạng thái hiện tại không phải là trạng thái ban đầu (không zoom)
-        const { min, max } = zoomStateRef.current;
-        return !(min === 0 && max === MAX_DATA_POINTS - 1);
-    };
-
     const handleZoom = ({ chart }) => {
         // Lưu trữ trạng thái zoom hiện tại vào ref
         const xAxis = chart.scales.x;
@@ -129,6 +128,19 @@ const ChartComponent = () => {
             min: xAxis.min,
             max: xAxis.max,
         };
+        // Tính toán khoảng cách giữa min và max để điều chỉnh số điểm dữ liệu
+        const zoomRange = xAxis.max - xAxis.min;
+
+        // Xác định số lượng điểm dữ liệu dựa trên phạm vi zoom (tuỳ chỉnh giá trị này theo nhu cầu của bạn)
+        if (zoomRange < 25) {
+            SET_MAX_DATA_POINTS(10); // Khi phóng to, tăng số điểm dữ liệu
+        } else if (zoomRange < 50) {
+            SET_MAX_DATA_POINTS(20); // Khi phóng to, tăng số điểm dữ liệu
+        } else if (zoomRange < 200) {
+            SET_MAX_DATA_POINTS(50); // Phạm vi trung bình
+        } else {
+            SET_MAX_DATA_POINTS(100); // Khi thu nhỏ, giảm số điểm dữ liệu
+        }
     };
 
     const data = {
@@ -142,7 +154,8 @@ const ChartComponent = () => {
                 fill: true,
                 parsing: { xAxisKey: 'x', yAxisKey: 'y' },
                 yAxisID: 'y',
-                tension: 0.4,
+                tension: 0.2,
+
             },
             {
                 label: 'Humidity (%)',
@@ -152,7 +165,7 @@ const ChartComponent = () => {
                 fill: true,
                 parsing: { xAxisKey: 'x', yAxisKey: 'y' },
                 yAxisID: 'y1',
-                tension: 0.4,
+                tension: 0.2,
             },
             {
                 label: 'Light Intensity (lux)',
@@ -162,7 +175,7 @@ const ChartComponent = () => {
                 fill: true,
                 parsing: { xAxisKey: 'x', yAxisKey: 'y' },
                 yAxisID: 'y2',
-                tension: 0.4,
+                tension: 0.2,
             },
         ],
     };
@@ -194,53 +207,67 @@ const ChartComponent = () => {
                 type: 'linear',
                 display: true,
                 position: 'left',
-                max: max.temp + 2,
-                min: min.temp - 2,
+                max: max.temp + 30,
+                min: min.temp - 10,
                 title: {
                     display: true,
                     text: 'Temperature (°C)',
+                    color: 'rgba(255, 99, 132, 1)', // Màu của tiêu đề trục y
+                },
+                ticks: {
+                    stepSize: 0.5, // Điều chỉnh khoảng cách giữa các tick thành 5 đơn vị
                 },
             },
             y1: {
                 type: 'linear',
                 display: true,
                 position: 'left',
-                max: max.humidity + 20,
-                min: min.humidity - 20,
+                max: max.humidity + 80,
+                min: min.humidity,
                 title: {
                     display: true,
                     text: 'Humidity (%)',
+                    color: 'rgba(54, 162, 235, 1)', // Màu của tiêu đề trục y
                 },
                 grid: {
                     drawOnChartArea: false,
+                },
+                ticks: {
+                    stepSize: 10, // Điều chỉnh khoảng cách giữa các tick thành 10 đơn vị
                 },
             },
             y2: {
                 type: 'linear',
                 display: true,
                 position: 'right',
-                min: min.light - 100,
-                max: max.light + 100,
+                min: min.light > 0 ? (min(min.light - 50, 0) > 0 ? min(min.light - 50, 0) : 0) : 0,
+                max: max.light + 50,
                 title: {
                     display: true,
                     text: 'Light Intensity (lux)',
+                    color: 'rgba(255, 206, 86, 1)'
                 },
                 grid: {
                     drawOnChartArea: false,
+                },
+                ticks: {
+                    stepSize: 5, // Điều chỉnh khoảng cách giữa các tick thành 5 đơn vị
                 },
             },
         },
         plugins: {
             legend: {
                 position: 'top',
+
             },
             title: {
                 display: true,
                 text: 'Sensor Status Over Time',
             },
             datalabels: {
-                color: '#666',
+                color: '#F8F8FF',
                 font: {
+                    size: 13,
                     weight: 'bold',
                 },
                 formatter: function (value) {
@@ -274,7 +301,7 @@ const ChartComponent = () => {
     };
 
     return (
-        <div style={{ position: 'relative', width: '100%', height: 600 }}>
+        <div style={{ position: 'relative', width: '100%', height: 800 }}>
             <Line ref={chartRef} data={data} options={options} />
             {spinner && (
                 <div>
