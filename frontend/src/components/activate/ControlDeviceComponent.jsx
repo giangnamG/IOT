@@ -101,6 +101,7 @@ export default function ControlDeviceComponent() {
 
         }
 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dataResponseCommand])
 
     useEffect(() => {
@@ -115,8 +116,8 @@ export default function ControlDeviceComponent() {
                 allDeviceIsOn: false,
             }));
         }
-
-    }, [toggles])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [toggles.airConditionerIsOn, toggles.lightBulbIsOn, toggles.fanIsOn])
     useEffect(() => {
         axios.get(config.backend.baseUrl + '/device/status')
             .then(response => {
