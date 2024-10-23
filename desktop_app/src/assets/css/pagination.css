@@ -1,0 +1,17 @@
+.custom-pagination-item {
+    background-color: #f8f9fa !important; /* Màu nền mặc định */
+    color: #007bff !important; /* Màu chữ mặc định */
+    border: 1px solid #ddd !important; /* Đường viền cho các mục */
+
+    /* Thêm hiệu ứng hover */
+    &:hover {
+        background-color: #e9ecef !important; /* Màu nền khi hover */
+        color: #0056b3 !important; /* Màu chữ khi hover */
+    }
+}
+
+.custom-pagination-item-active {
+    background-color: #007bff !important; /* Màu nền cho mục đang chọn */
+    color: #fff !important; /* Màu chữ cho mục đang chọn */
+    border: 1px solid #007bff !important; /* Đường viền cho mục đang chọn */
+}

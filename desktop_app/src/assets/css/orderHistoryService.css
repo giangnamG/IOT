@@ -1,0 +1,11 @@
+.scroll-container {
+    max-height: 300px; /* Điều chỉnh chiều cao tùy thuộc vào thiết kế của bạn */
+    overflow-y: auto; /* Hiển thị thanh cuộn dọc khi nội dung vượt quá chiều cao */
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: inherit; /* Đảm bảo rằng màu nền của thead không bị che */
+}

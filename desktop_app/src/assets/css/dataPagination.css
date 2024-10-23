@@ -1,0 +1,30 @@
+.custom-pagination {
+    --pagination-background: #1c1e22; /* Đảm bảo bạn sử dụng màu từ config nếu có */
+}
+
+.custom-pagination .page-item {
+    background-color: #282c34 !important;
+    border-color: #282c34 !important;
+}
+
+.custom-pagination .page-item .page-link {
+    color: #007bff !important; /* Màu chữ cho các phần tử */
+    border: none;
+}
+
+.custom-pagination .page-item.active .page-link {
+    background-color: #007bff !important; /* Màu nền cho phần tử đang active */
+    color: #fff !important; /* Màu chữ cho phần tử đang active */
+    border-radius: 8px !important; /* Độ cong cho các góc của phần tử đang active */
+}
+
+.custom-pagination .page-item.disabled .page-link {
+    background-color: #282c34 !important; /* Màu nền cho các phần tử disabled */
+    color: #6c757d !important; /* Màu chữ cho các phần tử disabled */
+    border-color: #282c34 !important;
+}
+
+.custom-pagination .page-link {
+    background-color: #282c34 !important; /* Áp dụng cho các nút và dấu chấm */
+    color: #007bff !important;
+}

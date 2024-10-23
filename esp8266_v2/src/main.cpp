@@ -36,6 +36,8 @@ void loop()
     controller->esp.psClient.subscribe("airConditioner/pub");
     controller->esp.psClient.subscribe("lightBulb/pub");
     controller->esp.psClient.subscribe("allDevice/pub");
+    controller->esp.psClient.subscribe("deviceStatus/pub");
+    controller->esp.psClient.subscribe("deviceOther/pub");
   }
   /*
    * Gọi psClient.loop() để xử lý gói tin MQTT
@@ -45,7 +47,7 @@ void loop()
   /*
    * Xử lý dữ liệu và nhận dữ liệu từ các topic subscribed
    */
-  controller->devices.listen(controller->esp.psClient);
+  controller->devicesController.process_topic(controller->esp.psClient);
 
   /*
    * Xử lý dữ liệu và publish định kỳ

@@ -10,7 +10,7 @@ from flask_mqtt import Mqtt
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from flasgger import Swagger
-from models import db, DataRealTime, DeviceHistory,DeviceStatus
+from models import db, DataRealTime, DeviceHistory, WarningSensorCount
 from sqlalchemy import func
 
 ''' ------------------------------Load Variable----------------------------------'''
@@ -38,34 +38,6 @@ PORT = os.getenv('PORT')
 mqtt = Mqtt(app)
 socketio = SocketIO(app, cors_allowed_origins=front_end)
 
-''' ------------------------------------------API DOCUMENT------------------------------------- '''
-
-''' Example usage'''
-@app.route('/users', methods=['GET'])
-def get_users():
-    """
-    Get Users
-    ---
-    responses:
-      200:
-        description: A list of users
-        schema:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-              name:
-                type: string
-              isAdmin:
-                type: boolean
-    """
-    users = [
-        {"id": 1, "name": "John Doe","isAdmin": False},
-        {"id": 2, "name": "Jane Doe","isAdmin": True}
-    ]
-    return jsonify(users)
 
 ''' ------------------------------------------SERVER------------------------------------- '''
     
@@ -90,12 +62,17 @@ def data_stream_logs():
         page = data.get('page', 1)
         per_page = data.get('per_page', 10)
         latest = data.get('latest', True) 
-        fromDay = data.get('fromDay', False)
-        toDay = data.get('toDay', False)
         
         temp = data.get('temp', None)
         humidity = data.get('humidity', None)
         light = data.get('light', None)
+        dust = data.get('dust', None)
+        rain = data.get('rain', None)
+        wind = data.get('wind', None)
+        timestamp = data.get('timestamp', None)
+        
+        fromDay = data.get('fromDay', False)
+        toDay = data.get('toDay', False)
         
         query = DataRealTime.query
         
@@ -105,14 +82,15 @@ def data_stream_logs():
         else:
             query = query.order_by(DataRealTime.timestamp.asc())
 
-        if fromDay and toDay:
-            query = query.filter(
-                func.DATE(DataRealTime.timestamp).between(fromDay, toDay)
-                )
-        elif fromDay:
-            query = query.filter(DataRealTime.timestamp >= fromDay)
-        elif toDay:
-            query = query.filter(DataRealTime.timestamp <= toDay)
+        # Lọc kết hợp theo khoảng thời gian
+        # if fromDay and toDay:
+        #     query = query.filter(
+        #         func.DATE(DataRealTime.timestamp).between(fromDay, toDay)
+        #         )
+        # elif fromDay:
+        #     query = query.filter(DataRealTime.timestamp >= fromDay)
+        # elif toDay:
+        #     query = query.filter(DataRealTime.timestamp <= toDay)
             
         if temp is not None:
             query = query.filter(DataRealTime.temp.like(f"{temp}%"))
@@ -120,6 +98,14 @@ def data_stream_logs():
             query = query.filter(DataRealTime.humidity.like(f"{humidity}%"))
         if light is not None:
             query = query.filter(DataRealTime.light.like(f"{light}%"))
+        if dust is not None:
+            query = query.filter(DataRealTime.dust.like(f"{dust}%"))
+        if wind is not None:
+            query = query.filter(DataRealTime.wind.like(f"{wind}%"))
+        if rain is not None:
+            query = query.filter(DataRealTime.rain.like(f"{rain}%"))
+        if timestamp is not None:
+            query = query.filter(DataRealTime.timestamp.like(f"{timestamp}%"))
                 
         data_paginated = query.paginate(page=page, per_page=per_page, error_out=False)
         
@@ -138,16 +124,15 @@ def data_stream_logs():
 @app.route('/api/v1/device/status', methods=['GET'])
 def device_status():
     try:
-        devices = DeviceStatus.query.all()
+        topic = topics_publish['deviceStatus']
+        cmd = 'status/get'
+        mqtt.publish(topic, cmd)
+        time.sleep(2)
+        mqtt.unsubscribe(topic)
         
-        return jsonify([
-            {
-                'id': device.id,
-                'device_name': device.device_name,
-                'isOn': device.isOn
-            }
-            for device in devices
-        ])
+        return jsonify({
+            'message': 'No Error'
+        }), 200
     except Exception as e:
         return jsonify(f"Error querying devices: {e}"), 500
 
@@ -176,20 +161,21 @@ def device_logs():
         page = data.get('page', 1)
         per_page = data.get('per_page', 10)
         latest = data.get('latest', True) 
+        timestamp = data.get('timestamp', None)
         fromDay = data.get('fromDay', False)
         toDay = data.get('toDay', False)
         
         query = DeviceHistory.query
         
         # Lọc theo khoảng thời gian từ fromDay đến toDay
-        if fromDay and toDay:
-            query = query.filter(
-                func.DATE(DeviceHistory.timestamp).between(fromDay, toDay)
-                )
-        elif fromDay:
-            query = query.filter(DeviceHistory.timestamp >= fromDay)
-        elif toDay:
-            query = query.filter(DeviceHistory.timestamp <= toDay)
+        # if fromDay and toDay:
+        #     query = query.filter(
+        #         func.DATE(DeviceHistory.timestamp).between(fromDay, toDay)
+        #         )
+        # elif fromDay:
+        #     query = query.filter(DeviceHistory.timestamp >= fromDay)
+        # elif toDay:
+        #     query = query.filter(DeviceHistory.timestamp <= toDay)
             
         # Sắp xếp và phân trang kết quả
         if latest:
@@ -197,6 +183,9 @@ def device_logs():
         else:
             query = query.order_by(DeviceHistory.timestamp.asc())
 
+        if timestamp is not None:
+            query = query.filter(DeviceHistory.timestamp.like(f"{timestamp}%"))
+        
         data_paginated = query.paginate(page=page, per_page=per_page, error_out=False)
             
         res = [data.to_dict() for data in data_paginated]
@@ -238,15 +227,18 @@ def handle_connect(client, userdata, flags, rc):
         client.subscribe(topics_subscribe['lightBulb'])
         client.subscribe(topics_subscribe['allDevice'])
         
+        client.subscribe(topics_subscribe['deviceStatus'])
+        
     else:
         print(f"Failed to connect, return code {rc}")
 
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, msg):
+    t = time.localtime()
+    current_time = time.strftime("%H:%M:%S %Y-%m-%d", t)  # Chuỗi thời gian
     try:
         message = json.loads(msg.payload.decode())
-        t = time.localtime()
-        current_time = time.strftime("%H:%M:%S %Y-%m-%d", t)  # Chuỗi thời gian
+        print("mess_x: %s" % message)
 
         custom_data = None
 
@@ -260,6 +252,9 @@ def handle_mqtt_message(client, userdata, msg):
                     'temp': message['temp'],
                     'humidity': message['humidity'],
                     'light': message['light'],
+                    'dust': message['dust'],
+                    'windSpeed': message['windSpeed'],
+                    'rain': message['rain']
                 }
             }
             ''' emit real time data '''
@@ -270,29 +265,62 @@ def handle_mqtt_message(client, userdata, msg):
                 new_data = DataRealTime(temp=custom_data['message']['temp'],
                                         humidity=custom_data['message']['humidity'],
                                         light=custom_data['message']['light'],
+                                        dust=custom_data['message']['dust'],
+                                        rain=custom_data['message']['rain'],
+                                        wind=custom_data['message']['windSpeed'],
                                         timestamp=timestamp)
                 db.session.add(new_data)
                 db.session.commit()
+                
+            ''' Emit Đếm Cảnh Báo '''
+            try:
+                warnings = {}
+                with app.app_context():
+                    countWarning = WarningSensorCount.query.all()
+                    for row in countWarning:
+                        row_dict = row.to_dict()
+                        cnt = row_dict['count']
+                        status = ''
+                        
+                        if message[row_dict['sensor_name']] >= sensors[row_dict['sensor_name']]['threshold']:
+                            if row.isWarning:
+                                status = 'waring'
+                            else:
+                                status = 'warning'
+                                row.count += 1  # Tăng giá trị count
+                                row.isWarning = True
+                                cnt += 1 # T
+                                # update cnt
+                        else:
+                            status = 'normal'
+                            row.isWarning = False
+                            
+                        db.session.commit()  # Đánh dấu bản ghi để cập nhật
+                        
+                        warnings[row_dict['sensor_name']] = {
+                            'count': cnt,
+                            'status': status,
+                            'threshold': sensors[row_dict['sensor_name']]['threshold']
+                        }
+                    
+                socketio.emit('waring_count', warnings)
+                
+            except Exception as e:
+                print(f"Error: {str(e)}")
+            
+            
         else:
-            print("mess_x: %s" % message)
             device_name = message['topic'].split('/')[0]
             cmd = message['cmd']
             status = message['status']
             note = None
-            isOn = None
             if 'Successfully' in status:
-                updateDevice = True
                 note = status
             elif 'already off!' in status:
                 note = device_name +' is already off!'
-                updateDevice = False
-                isOn = False
             elif 'already on!' in status:
-                updateDevice = False
-                isOn = True
                 note = device_name + ' is already on!'
             else:
-                updateDevice = False
                 note = 'Some things went wrong'
             print(note)
             socketio.emit('device', {
@@ -302,20 +330,6 @@ def handle_mqtt_message(client, userdata, msg):
                 'timestamp': current_time  # timestamp for real time data
             })
             
-            # Cập nhập trạng thái của đèn
-            with app.app_context(): 
-                device = DeviceStatus.query.filter_by(device_name=device_name).first()
-                if device:
-                    # Cập nhật trạng thái isOn
-                    if updateDevice:
-                        device.isOn = not device.isOn
-                    else:
-                        if isOn is not None:
-                            device.isOn = isOn
-     
-                    device.note = note
-                    db.session.commit()
-            
             # Cập nhập Log Action
             with app.app_context(): 
                 timestamp = datetime.strptime(current_time, "%H:%M:%S %Y-%m-%d")
@@ -324,8 +338,24 @@ def handle_mqtt_message(client, userdata, msg):
                 db.session.commit()
     
     except Exception as e:
-        print("Error processing message: ", e)
-        print(f"Invalid topic: {msg.topic}")
+        try:
+            ''' Nhận trạng thái của device '''
+            message = msg.payload.decode().replace('"status":"{"','"status":{"')
+            message = message.replace('}"}','}}')
+            message = json.loads(message)
+            print(message)
+            device_name = message['topic'].split('/')[0]
+            cmd = message['cmd']
+            socketio.emit('deviceStatus', {
+                'device_name': device_name,
+                'cmd': cmd,
+                'status': message['status'],
+                'timestamp': current_time  # timestamp for real time data
+            })
+        except:
+            print("Error processing message: ", e)
+            
+            print(f"Invalid topic: {msg.topic}")
 
 
 @mqtt.on_log()
@@ -335,21 +365,25 @@ def handle_logging(client, userdata, level, buf):
     
 ''' ------------------------------------SERVER LAUNCH-----------------------------'''
 
-
 if __name__ == '__main__':
     # app.run(port=PORT, debug=True)
+    
+
     with app.app_context():
         db.create_all()
-        if not DeviceStatus.query.first():
-            fan = DeviceStatus(device_name='fan', isOn=False)
-            airConditioner = DeviceStatus(device_name='airConditioner', isOn=False)
-            lightBulb = DeviceStatus(device_name='lightBulb', isOn=False)
-            allDevice = DeviceStatus(device_name='allDevice', isOn=False)
-            
-            db.session.add(fan)
-            db.session.add(airConditioner)
-            db.session.add(lightBulb)
-            
-            db.session.commit()
+
+        countWarning = WarningSensorCount.query.count()
+        if countWarning == 0:
+            try:
+                for sensor in sensors.values():  # Sử dụng .values() để lặp qua giá trị của từ điển
+                    new_warning_count = WarningSensorCount(sensor_name=sensor['name'], count=0)
+                    db.session.add(new_warning_count)
+
+                # Commit tất cả các thay đổi một lần sau vòng lặp để tăng hiệu suất
+                db.session.commit()
+                print("WarningSensorCount created successfully")
+            except Exception as e:
+                print("Error creating WarningSensorCount: ", e)
+                
         
-    socketio.run(app, host='0.0.0.0', port=5000, use_reloader=True, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, use_reloader=False, debug=False)

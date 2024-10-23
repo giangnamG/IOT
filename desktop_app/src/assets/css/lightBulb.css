@@ -1,0 +1,14 @@
+@keyframes brighten {
+    from {
+        filter: drop-shadow(0 0 0px #FFA500);
+        fill-opacity: 0.5;
+    }
+    to {
+        filter: drop-shadow(0 0 15px #FFA500);
+        fill-opacity: 1;
+    }
+}
+
+.lightbulb-on {
+    animation: brighten 2s ease-in-out forwards;
+}

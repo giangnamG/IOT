@@ -11,7 +11,8 @@ private:
     /*
      * Giá trị đọc từ cảm biến
      */
-    float lightValue;
+    int lightValue;
+    int threshold = 500;
 
 public:
     /*
@@ -48,5 +49,10 @@ public:
     {
         Serial.print("Light sensor value: ");
         Serial.println(lightValue);
+    }
+    boolean checkThreshold()
+    {
+
+        return (1024 - lightValue) > threshold;
     }
 };

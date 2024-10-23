@@ -3,6 +3,8 @@
 #include "circuit/dht22.h"
 #include "circuit/lightsensor.h"
 #include "devices/devicesController.h"
+#include "circuit/sensorFader.h"
+#include "devices/warning.h"
 
 //  ---------------------------------------------DEFINE DATA TYPE--------------------------------------------------- ||
 
@@ -12,6 +14,9 @@ struct DataStreaming
     float temp;
     float humidity;
     int light;
+    int dust;
+    int rain;
+    int windSpeed;
     String time;
     String dump;
 };
@@ -27,15 +32,17 @@ private:
      * Khởi tạo cảm biến ánh sáng nối với chân GPIO12 (D6)
      */
     LightSensor lightSensor = LightSensor(A0);
+    SensorFader sensorFader = SensorFader();
+    Warning warning = Warning();
 
 public:
     Esp8266 esp;
-    DevicesController devices;
+    DevicesController devicesController;
 
     /*
      * Khởi tạo lớp Controller và khởi tạo đối tượng ESP
      */
-    Controller() : esp(), devices()
+    Controller() : esp(), devicesController()
     {
         // connect wifi
         esp.connect_wifi();
@@ -56,10 +63,12 @@ public:
         pinMode(D1, OUTPUT);
         pinMode(D2, OUTPUT);
         pinMode(D3, OUTPUT);
+        pinMode(D4, OUTPUT);
 
         digitalWrite(D1, LOW); // Đèn ban đầu tắt
         digitalWrite(D2, LOW); // Đèn ban đầu tắt
         digitalWrite(D3, LOW); // Đèn ban đầu tắt
+        digitalWrite(D4, LOW); // Đèn ban đầu tắt
     }
 
     //  ------------------------------------------------- Start Streaming Func --------------------------------------------------- ||
@@ -75,6 +84,25 @@ public:
         float humidity = dht22.readHumidity();
         float temperature = dht22.readTemperature();
         float light = lightSensor.readLight();
+        /*
+         * Kiểm tra vượt ngưỡng
+         */
+
+        if (lightSensor.checkThreshold())
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                warning.turnOn();
+                delay(500);
+                warning.turnOff();
+                delay(500);
+            }
+        }
+        else
+        {
+            warning.turnOff();
+        }
+
         Serial.print("Light sensor value: ");
         Serial.println(light);
         // Kiểm tra xem có đọc được giá trị hợp lệ không
@@ -87,15 +115,16 @@ public:
         streaming.temp = temperature;
         streaming.humidity = humidity;
         streaming.light = 1024 - light;
+        streaming.dust = sensorFader.readDust();
+        streaming.rain = sensorFader.readRain();
+        streaming.windSpeed = sensorFader.readWindSpeed();
+
         streaming.dump = "{\"temp\":" + String(streaming.temp) + "," +
                          "\"humidity\":" + String(streaming.humidity) + "," +
-                         "\"light\":" + String(streaming.light) + "}";
-
-        char buffer[150];
-
-        sprintf(buffer, "Pushing topic %s -> data: %s", streaming.topic.c_str(), streaming.dump.c_str());
-
-        Serial.println(buffer);
+                         "\"light\":" + String(streaming.light) + "," +
+                         "\"dust\":" + String(streaming.dust) + "," +
+                         "\"rain\":" + String(streaming.rain) + "," +
+                         "\"windSpeed\":" + String(streaming.windSpeed) + "}";
 
         esp.publish(streaming.topic, streaming.dump);
     }

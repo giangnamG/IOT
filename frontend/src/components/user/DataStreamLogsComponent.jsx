@@ -6,7 +6,7 @@ import DataPagination from "../activate/DataPagination";
 import ClockComponent from "../activate/ClockComponent"
 import SpinnerComponent from "../activate/SpinnerComponent"
 import "../../assets/css/fadeIn.css"
-import DateComponent from "../activate/DateComponent";
+// import DateComponent from "../activate/DateComponent";
 import { useSelector } from "react-redux"
 
 
@@ -43,12 +43,14 @@ export default function DataStreamLogsComponent({ props }) {
                 "page": currentPage,
                 "per_page": perPage,
                 "latest": isLatest,
-                "fromDay": fromDay,
-                "toDay": toDay,
+                // "fromDay": fromDay,
+                // "toDay": toDay,
+                "fromDay": false,
+                "toDay": false,
                 "temp": filterTemp,
                 "humidity": filterHumidity,
                 "light": filterLight,
-
+                "timestamp": filterTimestamp,
             })
                 .then(response => {
                     setData(response.data);
@@ -69,7 +71,7 @@ export default function DataStreamLogsComponent({ props }) {
 
             return () => clearInterval(interval);
         }
-    }, [currentPage, perPage, isRealTime, isLatest, fromDay, toDay, filterTemp, filterHumidity, filterLight]);
+    }, [currentPage, perPage, isRealTime, isLatest, fromDay, toDay, filterTemp, filterHumidity, filterLight, filterTimestamp]);
 
 
     const handlePageChange = (pageNumber) => {
@@ -153,14 +155,14 @@ export default function DataStreamLogsComponent({ props }) {
             <Container style={{
                 position: 'fixed',
                 top: 40,
-                left: 200,
+                right: 0,
                 width: '83%',
                 height: 'auto',
                 padding: '20px',
                 borderRadius: '5px',
                 color: config.app.styles.fontLink,
                 zIndex: 1000,
-                marginLeft: 200,
+                maxWidth: 2000,
                 backgroundColor: config.app.styles.backgroundColor
             }}>
                 <h1 style={{
@@ -199,16 +201,12 @@ export default function DataStreamLogsComponent({ props }) {
                         >
                             <option value="50">Row: 50</option>
                             <option value="50">50</option>
-                            <option value="60">60</option>
-                            <option value="70">70</option>
-                            <option value="80">80</option>
-                            <option value="90">90</option>
                             <option value="100">100</option>
+                            <option value="150">150</option>
                             <option value="200">200</option>
                             <option value="300">300</option>
                             <option value="400">400</option>
                             <option value="500">500</option>
-                            <option value="1000">1000</option>
                         </Form.Select>
                     </Col>
 
@@ -247,7 +245,7 @@ export default function DataStreamLogsComponent({ props }) {
                     <ClockComponent />
 
                     {/* Date Filter */}
-                    <DateComponent />
+                    {/* <DateComponent /> */}
 
                     {/* Button control real time */}
                     <Col lg={2} style={{
@@ -286,101 +284,103 @@ export default function DataStreamLogsComponent({ props }) {
                 marginTop: 150,
                 marginBottom: 20,
             }}>
-                <Table striped bordered hover style={{ width: '90%' }}>
-                    <thead className="fade-in fade-in-2">
-                        <tr>
-                            <th style={{ ...styles.table, fontSize: '18px' }}>#</th>
-                            <th style={{ ...styles.table, fontSize: '18px' }}>
-                                Nhiệt Độ
-                                <Button
-                                    onClick={() => handleSort('temp')}
-                                    style={{ backgroundColor: config.app.styles.backgroundColor, color: 'white', border: 'none' }}
-                                >
-                                    <i className="bi bi-funnel"></i>
-                                </Button>
-                                <input
-                                    type="text"
-                                    placeholder="Filter Temperature"
-                                    style={{
-                                        backgroundColor: config.app.styles.backgroundColor2,
-                                        color: 'red'
-                                    }}
-                                    onChange={(e) => setFilterTemp(e.target.value)}
-                                />
-                            </th>
-                            <th style={{ ...styles.table, fontSize: '18px' }}>
-                                Độ Ẩm
-                                <Button
-                                    onClick={() => handleSort('humidity')}
-                                    style={{ backgroundColor: config.app.styles.backgroundColor, color: 'white', border: 'none' }}
-                                >
-                                    <i className="bi bi-funnel"></i>
-                                </Button>
-                                <input
-                                    type="text"
-                                    placeholder="Filter Humidity"
-                                    style={{
-                                        backgroundColor: config.app.styles.backgroundColor2,
-                                        color: 'red'
-                                    }}
-                                    onChange={(e) => setFilterHumidity(e.target.value)}
-                                />
-                            </th>
-                            <th style={{ ...styles.table, fontSize: '18px' }}>
-                                Ánh Sáng
-                                <Button
-                                    onClick={() => handleSort('light')}
-                                    style={{ backgroundColor: config.app.styles.backgroundColor, color: 'white', border: 'none' }}
-                                >
-                                    <i className="bi bi-funnel"></i>
-                                </Button>
-                                <input
-                                    type="text"
-                                    placeholder="Filter Light"
-                                    style={{
-                                        backgroundColor: config.app.styles.backgroundColor2,
-                                        color: 'red'
-                                    }}
-                                    onChange={(e) => setFilterLight(e.target.value)}
-                                />
-                            </th>
-                            <th style={{ ...styles.table, fontSize: '18px' }}>
-                                Thời Gian
-                                <Button
-                                    onClick={() => handleSort('timestamp')}
-                                    style={{ backgroundColor: config.app.styles.backgroundColor, color: 'white', border: 'none' }}
-                                >
-                                    <i className="bi bi-funnel"></i>
-                                </Button>
-                                <input
-                                    type="text"
-                                    placeholder="Filter Timestamp"
-                                    style={{
-                                        backgroundColor: config.app.styles.backgroundColor2,
-                                        color: 'red'
+                <div style={{ maxHeight: 965, overflowY: 'auto', width: '100%' }}>
+                    <Table striped bordered hover style={{ width: '100%', tableLayout: 'fixed' }}>
+                        <thead style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 200 }}>
+                            <tr>
+                                <th style={{ ...styles.table, fontSize: '18px', width: '10%' }}>#</th>
+                                <th style={{ ...styles.table, fontSize: '18px' }}>
+                                    Nhiệt Độ
+                                    <Button
+                                        onClick={() => handleSort('temp')}
+                                        style={{ backgroundColor: config.app.styles.backgroundColor, color: 'white', border: 'none' }}
+                                    >
+                                        <i className="bi bi-funnel"></i>
+                                    </Button>
+                                    <input
+                                        type="text"
+                                        placeholder="Filter Temperature"
+                                        style={{
+                                            backgroundColor: config.app.styles.backgroundColor2,
+                                            color: 'red'
+                                        }}
+                                        onChange={(e) => setFilterTemp(e.target.value)}
+                                    />
+                                </th>
+                                <th style={{ ...styles.table, fontSize: '18px' }}>
+                                    Độ Ẩm
+                                    <Button
+                                        onClick={() => handleSort('humidity')}
+                                        style={{ backgroundColor: config.app.styles.backgroundColor, color: 'white', border: 'none' }}
+                                    >
+                                        <i className="bi bi-funnel"></i>
+                                    </Button>
+                                    <input
+                                        type="text"
+                                        placeholder="Filter Humidity"
+                                        style={{
+                                            backgroundColor: config.app.styles.backgroundColor2,
+                                            color: 'red'
+                                        }}
+                                        onChange={(e) => setFilterHumidity(e.target.value)}
+                                    />
+                                </th>
+                                <th style={{ ...styles.table, fontSize: '18px' }}>
+                                    Ánh Sáng
+                                    <Button
+                                        onClick={() => handleSort('light')}
+                                        style={{ backgroundColor: config.app.styles.backgroundColor, color: 'white', border: 'none' }}
+                                    >
+                                        <i className="bi bi-funnel"></i>
+                                    </Button>
+                                    <input
+                                        type="text"
+                                        placeholder="Filter Light"
+                                        style={{
+                                            backgroundColor: config.app.styles.backgroundColor2,
+                                            color: 'red'
+                                        }}
+                                        onChange={(e) => setFilterLight(e.target.value)}
+                                    />
+                                </th>
+                                <th style={{ ...styles.table, fontSize: '18px' }}>
+                                    Thời Gian
+                                    <Button
+                                        onClick={() => handleSort('timestamp')}
+                                        style={{ backgroundColor: config.app.styles.backgroundColor, color: 'white', border: 'none' }}
+                                    >
+                                        <i className="bi bi-funnel"></i>
+                                    </Button>
+                                    <input
+                                        type="text"
+                                        placeholder="Filter Timestamp"
+                                        style={{
+                                            backgroundColor: config.app.styles.backgroundColor2,
+                                            color: 'red'
+                                        }}
+                                        onChange={(e) => setFilterTimestamp(e.target.value)}
+                                    />
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="fade-in fade-in-6">
+                            {Array.isArray(filteredAndSortedData) && filteredAndSortedData.length > 0 &&
+                                filteredAndSortedData.map((item, index) => (
+                                    <tr key={index} style={{ cursor: 'pointer' }}>
+                                        <td style={{ ...styles.table }}>{index + 1}</td>
+                                        <td style={{ ...styles.table }}>{item.temp}</td>
+                                        <td style={{ ...styles.table }}>{item.humidity}</td>
+                                        <td style={{ ...styles.table }}>{item.light}</td>
+                                        <td style={{ ...styles.table }}>
+                                            {item.timestamp ? new Date(item.timestamp).toISOString().replace('T', ' ').substring(0, 19) : ''}
+                                        </td>
+                                    </tr>
+                                ))
+                            }
+                        </tbody>
+                    </Table>
+                </div>
 
-                                    }}
-                                    onChange={(e) => setFilterTimestamp(e.target.value)}
-                                />
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="fade-in fade-in-6">
-                        {Array.isArray(filteredAndSortedData) && filteredAndSortedData.length > 0 &&
-                            filteredAndSortedData.map((item, index) => (
-                                <tr key={index} style={{ cursor: 'pointer' }}>
-                                    <td style={{ ...styles.table }}>{index + 1}</td>
-                                    <td style={{ ...styles.table }}>{item.temp}</td>
-                                    <td style={{ ...styles.table }}>{item.humidity}</td>
-                                    <td style={{ ...styles.table }}>{item.light}</td>
-                                    <td style={{ ...styles.table }}>
-                                        {item.timestamp ? new Date(item.timestamp).toISOString().replace('T', ' ').substring(0, 19) : ''}
-                                    </td>
-                                </tr>
-                            ))
-                        }
-                    </tbody>
-                </Table>
             </div>
             <Container style={{
                 position: 'fixed',
@@ -389,7 +389,10 @@ export default function DataStreamLogsComponent({ props }) {
                 backgroundColor: config.app.styles.backgroundColor, // Màu nền của container
                 paddingTop: 12,
                 width: '77%',
-                height: 60
+                height: 60, // Đảm bảo chiều cao cố định
+                display: 'flex', // Sử dụng Flexbox cho Container
+                justifyContent: 'center', // Căn giữa nội dung theo chiều ngang
+                alignItems: 'center', // Căn giữa nội dung theo chiều dọc
             }}>
                 <Row style={{
                     justifyContent: 'center', // Căn giữa theo chiều ngang
@@ -401,6 +404,7 @@ export default function DataStreamLogsComponent({ props }) {
                         display: 'flex', // Sử dụng Flexbox cho Col
                         justifyContent: 'center', // Căn giữa theo chiều ngang bên trong Col
                         alignItems: 'center', // Căn giữa theo chiều dọc bên trong Col
+                        height: '100%', // Đảm bảo Col chiếm toàn bộ chiều cao
                     }}>
                         {/* Pagination */}
                         <DataPagination
@@ -412,12 +416,14 @@ export default function DataStreamLogsComponent({ props }) {
                                 justifyContent: 'center', // Căn giữa theo chiều ngang
                                 alignItems: 'center', // Căn giữa theo chiều dọc
                                 width: '100%', // Đảm bảo chiếm toàn bộ chiều rộng của Col
+                                height: '100%', // Đảm bảo chiếm toàn bộ chiều cao để căn giữa dọc
                                 backgroundColor: config.app.styles.backgroundColor
                             }}
                         />
                     </Col>
                 </Row>
             </Container>
+
 
             {
                 isLoading && <SpinnerComponent />

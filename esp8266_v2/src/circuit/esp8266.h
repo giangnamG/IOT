@@ -15,8 +15,8 @@ private:
     // Thông tin MQTT Broker
 
     // Địa chỉ IP của MQTT broker
-    const char *mqtt_server = "10.20.30.232";
-    const int mqtt_port = 1883;
+    const char *mqtt_server = "10.21.168.219";
+    const int mqtt_port = 1884;
 
     // Tài khoản MQTT
     const char *mqtt_user = "ngn";
@@ -39,11 +39,15 @@ public:
         strcpy(topic_subscribes[1], "airConditioner/pub");
         strcpy(topic_subscribes[2], "lightBulb/pub");
         strcpy(topic_subscribes[3], "allDevice/pub");
+        strcpy(topic_subscribes[4], "deviceStatus/pub");
+        strcpy(topic_subscribes[5], "deviceOther/pub");
 
         strcpy(topic_publish[0], "fan/sub");
         strcpy(topic_publish[1], "airConditioner/sub");
         strcpy(topic_publish[2], "lightBulb/sub");
         strcpy(topic_publish[3], "allDevice/sub");
+        strcpy(topic_publish[4], "deviceStatus/sub");
+        strcpy(topic_publish[5], "deviceOther/sub");
     }
 
     void connect_wifi()
@@ -140,7 +144,7 @@ public:
     void publish(String topic, String message)
     {
         // Publish một thông điệp đến topic
-        Serial.print("Publishing topic: " + topic + " -> message: ");
+        Serial.print("Publishing topic: " + topic + " -> data: ");
         Serial.println(message);
         psClient.publish(topic.c_str(), message.c_str());
     }
