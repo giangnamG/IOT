@@ -5,12 +5,13 @@ import '../../assets/css/spinIcon.css'
 import { Row, Col, Container } from 'react-bootstrap'
 import config from '../../config'
 
-import ControlDeviceComponent from '../activate/ControlDeviceComponent';
+import NewControlDeviceComponent from '../activate/NewControlDeviceComponent';
 import SummaryCardsComponent from './SummaryCardsComponent'
 import ClockComponent from '../activate/ClockComponent'
 import WebSocketComponent from '../helper/socket/WebSocketComponent'
-import ChartComponent from "../helper/ChartComponent"
+import CharComponentSensorNew from "../helper/CharComponentSensorNew"
 import WarningSensorComponent from '../activate/WarningSensorComponent'
+
 export default function DashboardComponent({ props }) {
 
     return (
@@ -21,7 +22,7 @@ export default function DashboardComponent({ props }) {
                 top: 50, // Đặt nó ở trên cùng của trang
                 left: 300, // Trải rộng hết chiều ngang
                 zIndex: 1000, // Đặt zIndex cao để nó luôn nằm trên các thành phần khác
-            }}>Dashboard</h1>
+            }}>New Dashboard</h1>
 
             <Row style={{
                 height: '100%',
@@ -31,25 +32,25 @@ export default function DashboardComponent({ props }) {
                 top: 100, // Đặt nó ở trên cùng của trang
                 left: 250, // Trải rộng hết chiều ngang
                 zIndex: 1000, // Đặt zIndex cao để nó luôn nằm trên các thành phần khác
-                maxWidth: '100%',
+                width: 1550,
                 border: '1px solid',
                 borderColor: config.app.styles.backgroundColor2,
                 borderRadius: '8px',
                 boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
                 marginLeft: 50,
                 marginRight: 10,
-            }} className='fade-in fade-in-4'>
+            }} className='fade-in fade-in-2'>
 
                 {/* Chart */}
                 <Col lg={8}>
-                    <Row className="fade-in fade-in-4" style={{
+                    <Row className="fade-in fade-in-2" style={{
                         position: 'relative',
                         zIndex: 10,
                         borderRadius: '8px',
                         backgroundColor: config.app.styles.backgroundColor,
                         cursor: 'pointer'
                     }}>
-                        <ChartComponent data={props} />
+                        <CharComponentSensorNew data={props} />
                     </Row>
                 </Col>
                 {/* View Panel */}
@@ -60,7 +61,7 @@ export default function DashboardComponent({ props }) {
                             display: 'flex',
                             alignItems: 'center',
                             height: 50,
-                            maxWidth: '92%',
+                            maxWidth: '95%',
                             marginTop: 30,
                             marginBottom: 20,
                             marginLeft: 10,
@@ -74,27 +75,23 @@ export default function DashboardComponent({ props }) {
                             <ClockComponent />
                         </div>
                     </Row>
-                    {/* Summary */}
+
                     <Row>
-                        <SummaryCardsComponent />
+                        <Col lg={12}>
+                            <NewControlDeviceComponent />
+                        </Col>
+                        <Col style={{
+                            marginTop: 50,
+                            width: '100%',
+                            backgroundColor: config.app.styles.backgroundColor,
+                            borderRadius: '8px',
+                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)'
+                        }}>
+                            <WarningSensorComponent />
+                        </Col>
                     </Row>
-                    <Col>
-                        <Row>
-                            <Col lg={12}>
-                                <ControlDeviceComponent />
-                            </Col>
-                            {/* <Col lg={12} style={{
-                                paddingTop: 20,
-                            }}>
-                                <WarningSensorComponent />
-                            </Col> */}
-                        </Row>
-                    </Col>
                 </Col>
             </Row>
-            {/* Controller */}
-
-
         </>
     )
 }

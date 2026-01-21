@@ -29,6 +29,7 @@ export default function SideBarComponent() {
     const links = [
         { href: '/', label: 'IOT APP' },
         { href: '/#Dashboard', label: 'Dashboard' },
+        { href: '/#NewDashboard', label: 'NewDashboard' },
         { href: '/#Devices', label: 'Action History' },
         { href: '/#DataStreamLogs', label: 'Data Sensor' },
         { href: '/#Profile', label: 'Profile' },
@@ -37,6 +38,13 @@ export default function SideBarComponent() {
     const handleActionClick = (href) => {
         switch (href) {
             case '/#Dashboard':
+                dispatch(setHook({
+                    hookName: href,
+                    props: {}
+                }))
+                console.log(href)
+                break;
+            case '/#NewDashboard':
                 dispatch(setHook({
                     hookName: href,
                     props: {}

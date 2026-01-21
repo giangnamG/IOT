@@ -127,7 +127,7 @@ def device_status():
         topic = topics_publish['deviceStatus']
         cmd = 'status/get'
         mqtt.publish(topic, cmd)
-        time.sleep(2)
+        time.sleep(0.5)
         mqtt.unsubscribe(topic)
         
         return jsonify({
@@ -136,6 +136,23 @@ def device_status():
     except Exception as e:
         return jsonify(f"Error querying devices: {e}"), 500
 
+@app.route('/api/v1/device/led', methods=['POST'])
+def device_led():
+    try:
+        data = request.get_json()
+        print(data)
+        topic = topics_publish[data['topic']]
+        cmd = commands[data['cmd']]
+        mqtt.publish(topic, cmd)
+        time.sleep(1)
+        mqtt.unsubscribe(topic)
+        
+        return jsonify({
+            'message': 'No Error'
+        }), 200
+    except Exception as e:
+        # return {'error': e}, 500
+        return {'error': 'invalid command'}, 500
 @app.route('/api/v1/device/publish_cmd', methods=['POST'])
 def publish_cmd():
     try:
@@ -144,7 +161,7 @@ def publish_cmd():
         topic = topics_publish[data['topic']]
         cmd = commands[data['cmd']]
         mqtt.publish(topic, cmd)
-        time.sleep(3)
+        time.sleep(1)
         mqtt.unsubscribe(topic)
         
         return jsonify({
@@ -226,6 +243,7 @@ def handle_connect(client, userdata, flags, rc):
         client.subscribe(topics_subscribe['airConditioner'])
         client.subscribe(topics_subscribe['lightBulb'])
         client.subscribe(topics_subscribe['allDevice'])
+        client.subscribe(topics_subscribe['led'])
         
         client.subscribe(topics_subscribe['deviceStatus'])
         
@@ -272,7 +290,7 @@ def handle_mqtt_message(client, userdata, msg):
                 db.session.add(new_data)
                 db.session.commit()
                 
-            ''' Emit Đếm Cảnh Báo '''
+            ''' Emit Đến Cảnh Báo '''
             try:
                 warnings = {}
                 with app.app_context():
@@ -284,7 +302,7 @@ def handle_mqtt_message(client, userdata, msg):
                         
                         if message[row_dict['sensor_name']] >= sensors[row_dict['sensor_name']]['threshold']:
                             if row.isWarning:
-                                status = 'waring'
+                                status = 'warning'
                             else:
                                 status = 'warning'
                                 row.count += 1  # Tăng giá trị count

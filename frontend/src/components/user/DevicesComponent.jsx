@@ -248,7 +248,7 @@ export default function DataStreamLogsComponent({ props }) {
                         </tr>
                     </thead>
 
-                    <tbody className="fade-in fade-in-6">
+                    <tbody className="fade-in fade-in-0">
                         {Array.isArray(sortedData) && sortedData.length > 0 && sortedData
                             .filter((item) =>
                                 item.device_name.toLowerCase().includes(filterValue.toLowerCase())
@@ -279,7 +279,7 @@ export default function DataStreamLogsComponent({ props }) {
                     alignItems: 'center',      // Căn giữa theo chiều dọc
                     display: 'flex',           // Kích hoạt Flexbox
                     height: '100%',            // Chiếm toàn bộ chiều cao của Container
-                }} className="fade-in fade-in-8">
+                }} className="fade-in fade-in-2">
                     <Col lg={6} style={{
                         display: 'flex',            // Kích hoạt Flexbox trong Col
                         justifyContent: 'center',   // Căn giữa nội dung theo chiều ngang trong Col

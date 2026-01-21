@@ -3,14 +3,15 @@ import '../../assets/css/fadeIn.css'
 import '../../assets/css/spinIcon.css'
 
 import { Row, Col, Container } from 'react-bootstrap'
+import ChartComponent from "../helper/ChartComponent"
 import config from '../../config'
 
 import ControlDeviceComponent from '../activate/ControlDeviceComponent';
 import SummaryCardsComponent from './SummaryCardsComponent'
 import ClockComponent from '../activate/ClockComponent'
 import WebSocketComponent from '../helper/socket/WebSocketComponent'
-import ChartComponent from "../helper/ChartComponent"
 import WarningSensorComponent from '../activate/WarningSensorComponent'
+import ChartComponentSensor2 from '../helper/cc2'
 export default function DashboardComponent({ props }) {
 
     return (
@@ -78,22 +79,44 @@ export default function DashboardComponent({ props }) {
                     <Row>
                         <SummaryCardsComponent />
                     </Row>
-                    <Col>
-                        <Row>
-                            <Col lg={12}>
-                                <ControlDeviceComponent />
-                            </Col>
-                            {/* <Col lg={12} style={{
-                                paddingTop: 20,
-                            }}>
-                                <WarningSensorComponent />
-                            </Col> */}
-                        </Row>
-                    </Col>
                 </Col>
             </Row>
             {/* Controller */}
+            <Row
+                className="fade-in fade-in-4"
+                style={{
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 9999,
+                    maxHeight: 600,
+                    backgroundColor: config.app.styles.backgroundColor, // Đảm bảo màu nền rõ ràng
+                    padding: '20px 20px', // Khoảng cách bên trong để tránh chạm vào các cạnh,
+                    marginLeft: 300,
+                    marginRight: 10,
+                    border: '1px solid',
+                    borderColor: config.app.styles.backgroundColor2,
+                    borderRadius: '8px',
+                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)'
+                }}>
+                <Col lg={8}>
+                    <ChartComponentSensor2 />
+                </Col>
+                <Col>
+                    <Row>
+                        <Col lg={12}>
+                            <ControlDeviceComponent />
+                        </Col>
+                        <Col lg={12} style={{
+                            paddingTop: 20,
+                        }}>
+                            <WarningSensorComponent />
+                        </Col>
+                    </Row>
+                </Col>
 
+            </Row>
 
         </>
     )

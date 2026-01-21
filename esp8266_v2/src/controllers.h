@@ -64,11 +64,13 @@ public:
         pinMode(D2, OUTPUT);
         pinMode(D3, OUTPUT);
         pinMode(D4, OUTPUT);
+        pinMode(D7, OUTPUT);
 
         digitalWrite(D1, LOW); // Đèn ban đầu tắt
         digitalWrite(D2, LOW); // Đèn ban đầu tắt
         digitalWrite(D3, LOW); // Đèn ban đầu tắt
         digitalWrite(D4, LOW); // Đèn ban đầu tắt
+        digitalWrite(D7, LOW); // Đèn ban đầu tắt
     }
 
     //  ------------------------------------------------- Start Streaming Func --------------------------------------------------- ||
@@ -88,21 +90,6 @@ public:
          * Kiểm tra vượt ngưỡng
          */
 
-        if (lightSensor.checkThreshold())
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                warning.turnOn();
-                delay(500);
-                warning.turnOff();
-                delay(500);
-            }
-        }
-        else
-        {
-            warning.turnOff();
-        }
-
         Serial.print("Light sensor value: ");
         Serial.println(light);
         // Kiểm tra xem có đọc được giá trị hợp lệ không
@@ -118,6 +105,21 @@ public:
         streaming.dust = sensorFader.readDust();
         streaming.rain = sensorFader.readRain();
         streaming.windSpeed = sensorFader.readWindSpeed();
+
+        if (streaming.dust > 70)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                warning.turnOn();
+                delay(200);
+                warning.turnOff();
+                delay(200);
+            }
+        }
+        else
+        {
+            warning.turnOff();
+        }
 
         streaming.dump = "{\"temp\":" + String(streaming.temp) + "," +
                          "\"humidity\":" + String(streaming.humidity) + "," +

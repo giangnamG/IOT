@@ -3,8 +3,8 @@ topics_publish = {
     'airConditioner':'airConditioner/pub',
     'lightBulb':'lightBulb/pub',
     'allDevice':'allDevice/pub',
+    'led':'led/pub',
     'deviceStatus':'deviceStatus/pub',
-    'deviceOther':'deviceStatus/pub',
 }
 topics_subscribe = {
     'streaming/all':'streaming/all',
@@ -14,8 +14,8 @@ topics_subscribe = {
     'lights':'lights',
     'allDevice': 'allDevice/sub',
     'deviceStatus': 'deviceStatus/sub',
-    'deviceOther': 'deviceStatus/sub',
     
+    'led': 'led/sub',
     'fan': 'fan/sub',
     'airConditioner': 'airConditioner/sub',
     'lightBulb': 'lightBulb/sub'
@@ -41,7 +41,7 @@ sensors = {
     },
     'dust' : {
         'label': 'Độ Bụi',
-        'threshold': 50
+        'threshold': 70
     },
     'windSpeed' : {
         'label': 'Tốc Độ Gió',

@@ -15,7 +15,7 @@ private:
     // Thông tin MQTT Broker
 
     // Địa chỉ IP của MQTT broker
-    const char *mqtt_server = "10.21.168.219";
+    const char *mqtt_server = "10.21.171.87";
     const int mqtt_port = 1884;
 
     // Tài khoản MQTT
@@ -40,14 +40,14 @@ public:
         strcpy(topic_subscribes[2], "lightBulb/pub");
         strcpy(topic_subscribes[3], "allDevice/pub");
         strcpy(topic_subscribes[4], "deviceStatus/pub");
-        strcpy(topic_subscribes[5], "deviceOther/pub");
+        strcpy(topic_subscribes[5], "led/pub");
 
         strcpy(topic_publish[0], "fan/sub");
         strcpy(topic_publish[1], "airConditioner/sub");
         strcpy(topic_publish[2], "lightBulb/sub");
         strcpy(topic_publish[3], "allDevice/sub");
         strcpy(topic_publish[4], "deviceStatus/sub");
-        strcpy(topic_publish[5], "deviceOther/sub");
+        strcpy(topic_publish[5], "led/sub");
     }
 
     void connect_wifi()

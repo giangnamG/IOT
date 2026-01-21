@@ -2,7 +2,7 @@
 #include "fan.h"
 #include "lightbulb.h"
 #include "airconditional.h"
-#include "other.h"
+#include "led.h"
 
 struct ResultProcessTopic
 {
@@ -14,11 +14,11 @@ String prepare_topic_to_publish(String topicReceived);
 class DevicesController
 {
 private:
+    LED led = LED();
     Fan fan = Fan();
     LightBulb lightBulb = LightBulb();
     AirConditional airConditional = AirConditional();
     boolean allDeviceIsActive = false;
-    Other other = Other();
     /*
 Hàm xử lý bật tắt 1 device
 */
@@ -117,6 +117,7 @@ Hàm xử lý bật tắt 1 device
                  String("\"fan\": ") + (this->fan.deviceIsActive ? "true" : "false") + "," +
                  String("\"airConditional\": ") + (this->airConditional.deviceIsActive ? "true" : "false") + "," +
                  String("\"lightBulb\": ") + (this->lightBulb.deviceIsActive ? "true" : "false") + "," +
+                 String("\"led\": ") + (this->led.deviceIsActive ? "true" : "false") + "," +
                  String("\"allDevice\": ") + (this->allDeviceIsActive ? "true" : "false") +
                  "}";
 
@@ -195,11 +196,11 @@ public:
             isActive = this->getDeviceStatus(status);
         }
         /*
-            Nếu device này là other
+            Nếu device này là led
         */
         else if (strcmp(receivedTopic_global, topic_subscribes[5]) == 0)
         {
-            isActive = this->device_process(&other);
+            isActive = this->device_process(&led);
         }
 
         /*
@@ -231,7 +232,6 @@ public:
                 status = "TurnOn Successfully";
 
                 Serial.println("TurnOn successfully");
-                delay(100);
             }
             /*
              * Tắt thành công
@@ -241,7 +241,6 @@ public:
                 status = "TurnOff Successfully";
 
                 Serial.println("TurnOff successfully");
-                delay(100);
             }
             /*
              * nếu đang tắt mà Publish đến lệnh tắt
@@ -250,7 +249,6 @@ public:
             {
                 status = "is already off!";
                 Serial.println(status);
-                delay(100);
             }
             /*
              * nếu đang bật mà Publish đến lệnh bật
@@ -259,7 +257,6 @@ public:
             {
                 status = "is already on!";
                 Serial.println(status);
-                delay(100);
             }
             /*
              * Trạng thái trả về của get status device
@@ -274,7 +271,6 @@ public:
             {
                 status = "Wrong Command";
                 Serial.println("Failed to active message");
-                delay(100);
             }
         }
 

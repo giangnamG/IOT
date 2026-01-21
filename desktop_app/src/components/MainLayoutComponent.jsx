@@ -5,6 +5,7 @@ import ProfileComponent from "./user/ProfileComponent"
 import DashboardComponent from './user/DashboardComponent'
 import DevicesComponent from './user/DevicesComponent'
 import DataStreamLogsComponent from "./user/DataStreamLogsComponent";
+import NewDashboardComponent from "./user/NewDashboardComponent"
 import React from "react";
 
 export default function MainLayoutComponent() {
@@ -13,6 +14,7 @@ export default function MainLayoutComponent() {
 
     const MappingComponent = {
         '/#Dashboard': <DashboardComponent props={props} />,
+        '/#NewDashboard': <NewDashboardComponent props={props} />,
         '/#Devices': <DevicesComponent props={props} />,
         '/#DataStreamLogs': <DataStreamLogsComponent props={props} />,
         '/#Profile': <ProfileComponent props={props} />,

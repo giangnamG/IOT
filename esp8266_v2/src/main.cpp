@@ -37,7 +37,7 @@ void loop()
     controller->esp.psClient.subscribe("lightBulb/pub");
     controller->esp.psClient.subscribe("allDevice/pub");
     controller->esp.psClient.subscribe("deviceStatus/pub");
-    controller->esp.psClient.subscribe("deviceOther/pub");
+    controller->esp.psClient.subscribe("led/pub");
   }
   /*
    * Gọi psClient.loop() để xử lý gói tin MQTT

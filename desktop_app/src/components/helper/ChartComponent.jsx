@@ -257,7 +257,7 @@ const ChartComponent = () => {
     };
 
     return (
-        <div style={{ position: 'relative', width: '100%', height: 600 }}>
+        <div style={{ position: 'relative', width: '100%', height: 800 }}>
             <Line ref={chartRef} data={data} options={options} />
             {spinner && (
                 <div>
